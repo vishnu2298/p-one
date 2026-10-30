@@ -1,5 +1,13 @@
 # Run it tomorrow: step by step
 
+## Fastest way: just look at it
+
+```bash
+cd backend && npm install && npm run demo      # then open http://localhost:4000
+```
+
+One process serves the app and the API with demo data (see README, docs/screens and docs/APK.md). The rest of this page is the full three-terminal setup.
+
 ## What you need open (3 terminals)
 
 ```bash

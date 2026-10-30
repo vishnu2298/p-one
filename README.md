@@ -30,6 +30,13 @@ labelled icons, plain language, and a built-in text-size setting (Normal / Large
 - **Smooth feel**: skeleton loaders, gentle fade-ins, friendly toasts instead of pop-ups, warm colours and plain wording.
 - **Accessibility**: adjustable text size, high contrast palette, screen-reader labels, large touch targets, no gesture-only actions.
 
+## See it in one minute (no accounts, no keys)
+
+```bash
+cd backend && npm install && npm run demo
+```
+Open the address it prints (`http://localhost:4000`). It serves the built app and API together with demo data, and the same address works on a phone on your Wi-Fi ("Add to Home screen" installs it). Demo login: `demo@connectly.app` / `demo1234`; phone sign-in code: `123456`. Screens are in [docs/screens](docs/screens); APK notes in [docs/APK.md](docs/APK.md). After changing the app, refresh the bundled web build with `mobile/scripts/build-web.sh`.
+
 ## Quick start
 
 Requirements: Node 22.13+, Python 3.10+.

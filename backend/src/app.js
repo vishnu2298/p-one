@@ -1,5 +1,7 @@
 require('express-async-errors');
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -23,13 +25,16 @@ function createApp(db = open(), deps = {}) {
     windowMs, limit, standardHeaders: true, legacyHeaders: false,
     keyGenerator: (req) => (req.user ? `u${req.user.id}` : req.ip),
     message: { error: 'You are doing that a lot. Please wait a moment and try again.' },
-    validate: { keyGeneratorIpFallback: false },
   }));
   const limits = { create: per(20, 60 * 60 * 1000), chat: per(60, 60 * 1000) };
   const ctx = { db, ser, auth, notify, push, affiliate, limits };
 
   app.set('trust proxy', 1);
-  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    // The bundled web app shows product photos from other https hosts and talks to Firebase when configured.
+    contentSecurityPolicy: { directives: { ...helmet.contentSecurityPolicy.getDefaultDirectives(), 'img-src': ["'self'", 'data:', 'blob:', 'https:'], 'connect-src': ["'self'", 'https:'] } },
+  }));
   app.use(cors());
   app.use(express.json({ limit: '9mb' }));
   if (process.env.NODE_ENV !== 'test') {
@@ -41,6 +46,13 @@ function createApp(db = open(), deps = {}) {
 
   for (const mod of ['auth', 'listings', 'orders', 'chat', 'people', 'safety', 'notifications', 'affiliate', 'invites', 'brand', 'legal', 'groups', 'admin', 'share']) {
     app.use(require(`./routes/${mod}`)(ctx));
+  }
+
+  // Serve the prebuilt web app (backend/web) so the whole product runs from one process: `npm run demo`.
+  const webDir = process.env.WEB_DIR || path.join(__dirname, '..', 'web');
+  if (fs.existsSync(path.join(webDir, 'index.html'))) {
+    app.use(express.static(webDir, { maxAge: '1h' }));
+    app.get('*', (req, res, next) => ((req.get('accept') || '').includes('text/html') ? res.sendFile(path.join(webDir, 'index.html')) : next()));
   }
 
   app.use((req, res) => res.status(404).json({ error: 'Not found' }));

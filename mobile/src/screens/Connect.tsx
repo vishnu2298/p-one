@@ -56,7 +56,7 @@ export function Connect() {
 
   return (
     <Screen header={<Header title="Connect" subtitle="Meet people nearby" />} refresh={{ refreshing: people.refreshing, onRefresh: () => { people.refresh(); void mine.reload(true); } }}>
-      <Segmented options={[{ id: 'nearby', label: 'People' }, { id: 'mine', label: `${translate('Connected')}${mine.data?.connections.length ? ` (${mine.data.connections.length})` : ''}` }, { id: 'groups', label: 'Groups' }]} value={tab} onChange={setTab} />
+      <Segmented options={[{ id: 'nearby', label: 'People' }, { id: 'mine', label: 'Friends' }, { id: 'groups', label: 'Groups' }]} value={tab} onChange={setTab} />
 
       {tab === 'nearby' ? <>
         <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: radius.pill, borderWidth: 2, borderColor: colors.line, paddingHorizontal: 16, minHeight: 56, gap: 10 }}>

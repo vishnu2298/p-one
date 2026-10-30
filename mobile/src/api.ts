@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function defaultBase() {
   const env = process.env.EXPO_PUBLIC_API_URL;
+  if (env === 'same-origin' && typeof window !== 'undefined') return window.location.origin; // API serves this app (npm run demo)
   if (env) return env.replace(/\/$/, '');
   if (Platform.OS === 'web' && typeof window !== 'undefined') return `${window.location.protocol}//${window.location.hostname}:4000`;
   return Platform.OS === 'android' ? 'http://10.0.2.2:4000' : 'http://localhost:4000';

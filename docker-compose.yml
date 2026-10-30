@@ -1,0 +1,22 @@
+# Runs the API and the Python insights service. Set JWT_SECRET before using for real.
+services:
+  insights:
+    build: ./services/insights
+    ports: ["5000:5000"]
+  api:
+    build: ./backend
+    ports: ["4000:4000"]
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      INSIGHTS_URL: http://insights:5000
+      AUTO_SEED: ${AUTO_SEED:-0}
+      PUBLIC_URL: ${PUBLIC_URL:-}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${FIREBASE_SERVICE_ACCOUNT_JSON:-}
+      SEARCHAPI_KEY: ${SEARCHAPI_KEY:-}
+      AMAZON_TAG: ${AMAZON_TAG:-}
+      AFFILIATE_POSTBACK_SECRET: ${AFFILIATE_POSTBACK_SECRET:-}
+    volumes: ["connectly-data:/data"]
+    depends_on: [insights]
+volumes:
+  connectly-data:

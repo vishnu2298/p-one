@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "Connectly",
+    "slug": "connectly",
+    "scheme": "connectly",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": { "backgroundColor": "#FFFFFF" },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.connectly.mobile",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Choose photos of items you want to sell.",
+        "NSCameraUsageDescription": "Take photos of items you want to sell.",
+        "NSLocationWhenInUseUsageDescription": "Share your location in a chat so you can meet safely."
+      }
+    },
+    "android": {
+      "package": "app.connectly.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#1747C6",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": ["CAMERA", "ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": { "favicon": "./assets/favicon.png", "bundler": "metro", "name": "Connectly" },
+    "plugins": ["expo-image-picker", "expo-location"]
+  }
+}

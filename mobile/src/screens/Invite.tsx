@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Backdrop } from '../components/Backdrop';
 import { Linking, Modal, Platform, Pressable, ScrollView, Share, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
@@ -35,7 +36,7 @@ export function Invite() {
           <Ionicons name="gift" size={52} color={colors.primary} />
           <Txt variant="title" center>Bring your people</Txt>
           <Txt center color={colors.sub}>Invite family and friends. When they join with your code, you are connected right away.</Txt>
-          <View style={{ backgroundColor: '#fff', borderRadius: 14, paddingVertical: 12, paddingHorizontal: 24, marginTop: 6 }}>
+          <View style={{ backgroundColor: colors.glass, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 24, marginTop: 6 }}>
             <Txt variant="tiny" color={colors.sub} center>Your invite code</Txt>
             <Txt selectable style={{ fontSize: 32, letterSpacing: 4, fontWeight: '800', color: colors.primary }}>{info.code}</Txt>
           </View>
@@ -103,26 +104,27 @@ function ContactPicker({ visible, onClose, message, onSent }: { visible: boolean
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose} onShow={() => { if (!list) void load(); }}>
-      <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insets.top }}>
+      <View style={{ flex: 1, paddingTop: insets.top }}>
+          <Backdrop />
         <View style={{ flexDirection: 'row', alignItems: 'center', padding: space.lg, gap: 8 }}>
           <Txt variant="h2" style={{ flex: 1 }}>Choose contacts</Txt>
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} style={{ width: 48, height: 48, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="close" size={30} color={colors.text} /></Pressable>
         </View>
         <View style={{ paddingHorizontal: space.lg }}>
-          <TextInput accessibilityLabel="Search contacts" value={q} onChangeText={setQ} placeholder="Search by name…" placeholderTextColor="#7A8794" style={{ minHeight: 56, borderWidth: 2, borderColor: colors.line, borderRadius: radius.pill, paddingHorizontal: 18, fontSize: 18 * scale, backgroundColor: '#fff', color: colors.text }} />
+          <TextInput accessibilityLabel="Search contacts" value={q} onChangeText={setQ} placeholder="Search by name…" placeholderTextColor="#7A8794" style={{ minHeight: 56, borderWidth: 2, borderColor: colors.line, borderRadius: radius.pill, paddingHorizontal: 18, fontSize: 18 * scale, backgroundColor: colors.glass, color: colors.text }} />
         </View>
         <ScrollView contentContainerStyle={{ padding: space.lg, gap: 8 }}>
           {list === null ? <Loading /> : error ? <Txt color={colors.danger}>{error}</Txt> : !shown.length ? <Txt color={colors.sub}>No contacts found.</Txt> : shown.map((c) => {
             const on = picked.has(c.id);
             return (
-              <Pressable key={c.id} accessibilityRole="checkbox" accessibilityState={{ checked: on }} onPress={() => toggle(c.id)} style={{ minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: radius.md, paddingHorizontal: 14, borderWidth: 2, borderColor: on ? colors.primary : 'transparent' }}>
+              <Pressable key={c.id} accessibilityRole="checkbox" accessibilityState={{ checked: on }} onPress={() => toggle(c.id)} style={{ minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.glass, borderRadius: radius.md, paddingHorizontal: 14, borderWidth: 2, borderColor: on ? colors.primary : 'transparent' }}>
                 <Avatar name={c.name} size={44} /><View style={{ flex: 1 }}><Txt bold numberOfLines={1}>{c.name}</Txt><Txt variant="small" color={colors.sub}>{c.phone}</Txt></View>
                 <Ionicons name={on ? 'checkbox' : 'square-outline'} size={30} color={on ? colors.primary : colors.sub} />
               </Pressable>
             );
           })}
         </ScrollView>
-        <View style={{ padding: space.lg, paddingBottom: insets.bottom + space.md, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: colors.line }}>
+        <View style={{ padding: space.lg, paddingBottom: insets.bottom + space.md, backgroundColor: colors.glass, borderTopWidth: 1, borderTopColor: colors.line }}>
           <Button title={picked.size ? `Send to ${picked.size} ${picked.size === 1 ? 'person' : 'people'}` : 'Select people to invite'} icon="send" disabled={!picked.size} onPress={send} />
         </View>
       </View>

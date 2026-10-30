@@ -19,15 +19,15 @@ export function DealCard({ p, width }: { p: Product; width?: number }) {
   const [busy, setBusy] = useState(false);
   const go = async () => { setBusy(true); await openDeal(p); setBusy(false); };
   return (
-    <View style={{ width, backgroundColor: '#fff', borderRadius: radius.lg, overflow: 'hidden', ...shadow }}>
-      <View style={{ height: 130, backgroundColor: '#F1F4F8', alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ width, backgroundColor: colors.glass, borderRadius: radius.lg, overflow: 'hidden', borderWidth: 1, borderColor: colors.glassBorder, ...shadow }}>
+      <View style={{ height: 130, backgroundColor: 'rgba(255,255,255,0.7)', alignItems: 'center', justifyContent: 'center' }}>
         {p.image ? <Image source={{ uri: p.image }} accessibilityLabel={p.title} style={{ width: '100%', height: '100%' }} resizeMode="contain" /> : <Ionicons name="bag-handle" size={48} color={colors.sub} />}
         <View style={{ position: 'absolute', left: 8, top: 8 }}><Pill text="Ad" color={colors.sub} bg="#fff" /></View>
       </View>
       <View style={{ padding: 12, gap: 4 }}>
         <Txt variant="tiny" color={colors.sub} numberOfLines={1}>{p.merchant || 'Online store'}</Txt>
         <Txt bold numberOfLines={2} style={{ minHeight: 46 }}>{p.title}</Txt>
-        <Txt variant="h2" color={colors.primary}>{money(p.price)}</Txt>
+        <Txt variant="h2">{money(p.price)}</Txt>
         {p.rating ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><Stars rating={p.rating} size={15} /><Txt variant="tiny" color={colors.sub}>{p.reviews ? `(${p.reviews.toLocaleString('en-IN')})` : ''}</Txt></View> : null}
         <Button compact title="View deal" icon="open-outline" variant="buy" onPress={go} loading={busy} style={{ marginTop: 6 }} />
       </View>

@@ -7,7 +7,7 @@ Goal: a buy, sell and connect app that an 65-year-old in Madurai and a 22-year-o
 | Reality | Decision | Status |
 | --- | --- | --- |
 | Phone number is the identity; many users have no email | Phone OTP first (+91 default), Google second, email last | done |
-| Regional languages matter more than any feature, especially for older users | UI in **English, Hindi, Tamil** (more are one file each), picked on first launch and in Settings | this round |
+| Regional languages matter for older users | Deferred by decision: the app ships **English only**. Hindi and Tamil dictionaries are written and parked in `mobile/src/locales`; enabling them is a small change | later |
 | Bargaining is normal | **Make an offer** on any item; seller accepts or declines | this round |
 | Cash and **UPI** settle almost every local deal | Seller adds a UPI ID; after the seller accepts, buyer gets a **Pay with UPI** button (opens GPay/PhonePe/Paytm). Money goes buyer to seller directly; Connectly never holds funds, so no payment licence is needed | this round |
 | People want to call before meeting | After a deal is accepted both sides see each other's phone with **Call** and **WhatsApp** buttons. Numbers stay hidden until then | this round |

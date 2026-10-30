@@ -100,10 +100,10 @@ export function Settings() {
             </Pressable>
           ))}
         </View>
-        <View style={{ backgroundColor: colors.bg, borderRadius: 12, padding: 12 }}><Txt>This is how your text will look. Easy to read, easy to use.</Txt></View>
+        <View style={{ backgroundColor: colors.glassStrong, borderRadius: 16, padding: 14 }}><Txt>This is how your text will look. Easy to read, easy to use.</Txt></View>
       </Card>
 
-      <Card style={{ marginTop: 16, gap: 12 }}>
+      {LANGUAGES.length > 1 ? <Card style={{ marginTop: 16, gap: 12 }}>
         <Txt variant="h2">Language</Txt>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           {LANGUAGES.map((l) => (
@@ -112,7 +112,7 @@ export function Settings() {
             </Pressable>
           ))}
         </View>
-      </Card>
+      </Card> : null}
 
       <Card style={{ marginTop: 16, gap: 8 }}>
         <Row icon="notifications" label="Notifications" value={user?.pushEnabled ? 'On: messages, requests and updates' : 'Off: you will still see them in the app'} onPress={async () => { try { setUser((await api<{ user: Me }>('/me', { method: 'PATCH', body: { pushEnabled: !user?.pushEnabled } })).user); toast(user?.pushEnabled ? 'Notifications turned off' : 'Notifications turned on'); } catch (e: any) { notify('Could not change', e.message); } }} />

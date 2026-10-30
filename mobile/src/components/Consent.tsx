@@ -13,7 +13,7 @@ export function ConsentCheck({ error }: { error?: boolean }) {
   const nav = useNavigation<any>();
   return (
     <Pressable accessibilityRole="checkbox" accessibilityLabel={translate('I agree to the Terms of Use and Privacy Policy')} accessibilityState={{ checked: consent }} onPress={() => setConsent(!consent)}
-      style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', padding: 14, borderRadius: radius.md, backgroundColor: '#fff', borderWidth: 2, borderColor: error && !consent ? colors.danger : consent ? colors.primary : colors.line }}>
+      style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', padding: 14, borderRadius: radius.md, backgroundColor: colors.glass, borderWidth: 2, borderColor: error && !consent ? colors.danger : consent ? colors.primary : colors.line }}>
       <Ionicons name={consent ? 'checkbox' : 'square-outline'} size={34} color={consent ? colors.primary : colors.sub} />
       <View style={{ flex: 1 }}>
         <Txt variant="small">

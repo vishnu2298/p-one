@@ -29,7 +29,7 @@ export function Deals() {
 
   return (
     <Screen header={<Header title="Deals" subtitle="Top offers from online stores" />} refresh={{ refreshing: res.refreshing, onRefresh: res.refresh }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: radius.pill, borderWidth: 2, borderColor: colors.line, paddingHorizontal: 16, minHeight: 56, gap: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.glass, borderRadius: radius.pill, borderWidth: 2, borderColor: colors.line, paddingHorizontal: 16, minHeight: 56, gap: 10 }}>
         <Ionicons name="search" size={24} color={colors.primary} />
         <TextInput accessibilityLabel="Search deals" value={q} onChangeText={setQ} placeholder="Search products…" placeholderTextColor="#7A8794" style={{ flex: 1, fontSize: 18 * scale, color: colors.text, minHeight: 52 }} returnKeyType="search" />
         {q ? <Pressable accessibilityRole="button" accessibilityLabel="Clear search" onPress={() => setQ('')} hitSlop={10}><Ionicons name="close-circle" size={26} color={colors.sub} /></Pressable> : null}

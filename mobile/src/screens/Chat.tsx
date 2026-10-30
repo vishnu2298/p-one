@@ -129,7 +129,7 @@ export function Chat() {
             );
           })}
         </ScrollView>
-        <View style={{ backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: colors.line, paddingBottom: insets.bottom + 8 }}>
+        <View style={{ backgroundColor: colors.glass, borderTopWidth: 1, borderTopColor: colors.line, paddingBottom: insets.bottom + 8 }}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ padding: 10, gap: 8 }} keyboardShouldPersistTaps="handled">
             {QUICK.map((q) => (
               <Pressable key={q} accessibilityRole="button" onPress={() => send(q)} style={{ minHeight: 44, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.primarySoft, justifyContent: 'center' }}><Txt variant="small" bold color={colors.primary}>{q}</Txt></Pressable>

@@ -6,6 +6,7 @@ import { Providers } from './src/context';
 import { RootNavigator } from './src/navigation';
 import { ToastHost, Button, Txt } from './src/ui';
 import { OfflineBanner } from './src/motion';
+import { Backdrop } from './src/components/Backdrop';
 
 // Last line of defence: a friendly screen instead of a blank crash.
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { failed: boolean }> {
@@ -26,7 +27,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { fai
 
 export default function App() {
   const content = (
-    <SafeAreaProvider>
+    <SafeAreaProvider style={{ backgroundColor: 'transparent' }}>
       <Providers>
         <StatusBar style="dark" />
         <ErrorBoundary><RootNavigator /></ErrorBoundary>
@@ -37,7 +38,12 @@ export default function App() {
   );
   // On the web, present the app as a centred phone-width column.
   if (Platform.OS === 'web') {
-    return <View style={{ flex: 1, backgroundColor: '#E4EAF2', alignItems: 'center' }}><View style={{ flex: 1, width: '100%', maxWidth: 480, backgroundColor: '#fff', overflow: 'hidden' }}>{content}</View></View>;
+    return (
+      <View style={{ flex: 1, alignItems: 'center' }}>
+        <Backdrop />
+        <View style={{ flex: 1, width: '100%', maxWidth: 480, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.18)', boxShadow: '0px 0px 80px rgba(40,44,120,0.18)' } as any}>{content}</View>
+      </View>
+    );
   }
-  return content;
+  return <View style={{ flex: 1 }}><Backdrop />{content}</View>;
 }

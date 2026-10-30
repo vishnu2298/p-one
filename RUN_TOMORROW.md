@@ -36,14 +36,14 @@ To use **real** Firebase: delete `FIREBASE_DEV_MODE=1`, enable Phone and Google 
 
 ## Ten-minute test tour
 
-1. First launch asks for a **language** (English, हिन्दी, தமிழ்). Change it later in Settings.
-2. Welcome: tick the **consent** box, then phone sign-up with code 123456, then pick your city (try typing "madu").
+1. First launch is a single **welcome** screen. Tick the **consent** box, choose phone, enter code 123456, then your name and city (try typing "madu").
+2. Notice the glass look: aurora background, translucent cards, blurred headers, floating tab bar.
 3. Home: rotating hero banner, **Today's deals** (sample products until SearchAPI is reachable), a **Sponsored** card.
 4. Buy: open an item, **Buy Now**, use the **-10%** offer chip, send. Log in as the seller (demo@...) in a second browser window, Orders, **Accept**.
    Back as the buyer: Orders now shows **Call, WhatsApp and Pay with UPI**. Seller taps **Item handed over** for confetti and a review prompt.
 5. Sell: the orange + button, add a photo, price (a price hint appears), **List item**; try "pistol" in the title to see the safety block.
 6. Connect: People, Connected and **Groups** (join "Chennai Bike Riders" and post). Chat supports photos and location.
-7. Profile: Invite friends and family, **Selling as a business?** (brand hub with GST), Settings (text size, language, **Download my data**, Terms and policies).
+7. Profile: Invite friends and family, **Selling as a business?** (brand hub with GST), Settings (text size, **Download my data**, Terms and policies).
 8. Turn your Wi-Fi off briefly: the **offline banner** slides in and leaves by itself.
 
 ## Operator tools (uses AFFILIATE_POSTBACK_SECRET from backend/.env)

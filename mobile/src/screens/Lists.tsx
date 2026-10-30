@@ -166,7 +166,7 @@ export function Orders() {
 
       <Modal visible={!!rate} transparent animationType="fade" onRequestClose={() => setRate(null)}>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: space.lg }}>
-          <View style={{ backgroundColor: '#fff', borderRadius: 24, padding: 20, gap: 12, width: '100%', maxWidth: 480, alignSelf: 'center' }}>
+          <View style={{ backgroundColor: colors.sheet, borderRadius: 28, padding: 22, gap: 12, width: '100%', maxWidth: 480, alignSelf: 'center' }}>
             <Txt variant="title">How was it?</Txt>
             <Txt color={colors.sub}>Rate your experience with {rate ? (rate.role === 'buyer' ? rate.seller.name : rate.buyer.name) : ''}</Txt>
             <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6 }}>

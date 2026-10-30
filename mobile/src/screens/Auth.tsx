@@ -15,55 +15,7 @@ import { CityField } from '../components/CityPicker';
 import { ConsentCheck } from '../components/Consent';
 import { toast } from '../ui';
 
-const SLIDES = [
-  { icon: 'cart', color: colors.buy, bg: colors.buySoft, title: 'Buy what you need', text: 'Find phones, furniture, bikes and more from people near you.' },
-  { icon: 'pricetag', color: colors.sell, bg: colors.sellSoft, title: 'Sell what you don\'t', text: 'Add photos, set a price and your item is live in a minute.' },
-  { icon: 'people', color: colors.connect, bg: colors.connectSoft, title: 'Connect with people nearby', text: 'Chat safely, make friends and build trust with ratings and reviews.' },
-];
-
-export function Onboarding() {
-  const { finishOnboarding } = useAuth();
-  const { langChosen, setLang } = useSettings();
-  const [i, setI] = useState(0);
-  if (!langChosen) {
-    return (
-      <Screen scroll={false} contentStyle={{ padding: space.xl, justifyContent: 'center', gap: 14 }}>
-        <View style={{ alignItems: 'center', gap: 8, marginBottom: 12 }}>
-          <Logo size={84} />
-          <Txt variant="title" center>Choose your language</Txt>
-          <Txt center color={colors.sub}>भाषा चुनें  ·  மொழியைத் தேர்ந்தெடுக்கவும்</Txt>
-        </View>
-        {LANGUAGES.map((l, k) => (
-          <FadeIn key={l.id} index={k}>
-            <Button title={l.label} variant={l.id === 'en' ? 'secondary' : 'primary'} onPress={() => { haptic.tap(); setLang(l.id); }} style={{ minHeight: 72 }} />
-          </FadeIn>
-        ))}
-        <Txt variant="small" color={colors.sub} center>You can change this any time in Settings.</Txt>
-      </Screen>
-    );
-  }
-  const s = SLIDES[i];
-  const last = i === SLIDES.length - 1;
-  return (
-    <Screen scroll={false} contentStyle={{ padding: space.xl, justifyContent: 'space-between' }}>
-      <View style={{ alignItems: 'flex-end', minHeight: 48 }}>
-        {!last ? <Pressable accessibilityRole="button" onPress={finishOnboarding} style={{ minHeight: 48, justifyContent: 'center' }}><Txt bold color={colors.sub}>Skip</Txt></Pressable> : null}
-      </View>
-      <View style={{ alignItems: 'center', gap: 20 }}>
-        <View style={{ width: 200, height: 200, borderRadius: 100, backgroundColor: s.bg, alignItems: 'center', justifyContent: 'center' }}>
-          <Ionicons name={s.icon as any} size={96} color={s.color} />
-        </View>
-        <Txt variant="title" center>{s.title}</Txt>
-        <Txt color={colors.sub} center style={{ maxWidth: 360 }}>{s.text}</Txt>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          {SLIDES.map((_, k) => <View key={k} style={{ width: k === i ? 28 : 10, height: 10, borderRadius: 5, backgroundColor: k === i ? colors.primary : colors.line }} />)}
-        </View>
-      </View>
-      <Button title={last ? 'Get Started' : 'Next'} onPress={() => (last ? finishOnboarding() : setI(i + 1))} />
-    </Screen>
-  );
-}
-
+/** Quick onboarding: one screen. Agree, pick a way in, done. */
 export function Welcome() {
   const nav = useNavigation<any>();
   const google = useGoogle();
@@ -71,22 +23,22 @@ export function Welcome() {
   const [tried, setTried] = useState(false);
   const guard = (fn: () => void) => () => { if (!consent) { setTried(true); haptic.warn(); toast('Please tick the box to agree before continuing', 'info'); return; } fn(); };
   return (
-    <Screen contentStyle={{ padding: space.xl, justifyContent: 'center', gap: 16, flexGrow: 1 }}>
-      <View style={{ alignItems: 'center', gap: 8 }}>
-        <Logo size={96} />
-        <Txt variant="hero" color={colors.primary}>Connectly</Txt>
-        <Txt color={colors.sub} center>Buy  •  Sell  •  Connect</Txt>
-      </View>
-      <Txt variant="h2" center style={{ marginVertical: 8 }}>Everything you need, in one place.</Txt>
-      {referralCode ? <View style={{ backgroundColor: colors.buySoft, borderRadius: 14, padding: 12 }}><Txt bold color={colors.buy} center>You were invited! Code {referralCode} will be added when you sign up.</Txt></View> : null}
-      <ConsentCheck error={tried} />
-      <Button title="Continue with phone" icon="call" onPress={guard(() => nav.navigate('PhoneSignIn'))} />
-      {google.available ? <Button title="Continue with Google" icon="logo-google" variant="secondary" loading={google.busy} onPress={guard(google.run)} /> : null}
-      <Button title="Use email instead" icon="mail" variant="light" onPress={guard(() => nav.navigate('Register'))} />
-      <Pressable accessibilityRole="button" onPress={() => nav.navigate('Login')} style={{ minHeight: 56, alignItems: 'center', justifyContent: 'center' }}>
-        <Txt>Already have an email account? <Txt bold color={colors.primary}>Log in</Txt></Txt>
-      </Pressable>
-      <Txt variant="small" color={colors.sub} center>Simple. Safe. For everyone.</Txt>
+    <Screen scroll={false} contentStyle={{ padding: space.xl, justifyContent: 'space-between' }}>
+      <FadeIn style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14 }}>
+        <Logo size={92} />
+        <Txt variant="hero">Connectly</Txt>
+        <Txt color={colors.sub} center style={{ maxWidth: 280 }}>Buy, sell and meet people near you. Simple and safe.</Txt>
+        {referralCode ? <View style={{ backgroundColor: colors.buySoft, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 16, marginTop: 6 }}><Txt variant="small" bold color={colors.buy}>You were invited · code {referralCode}</Txt></View> : null}
+      </FadeIn>
+      <FadeIn index={2} style={{ gap: 12, backgroundColor: colors.glass, borderRadius: 32, padding: 18, borderWidth: 1, borderColor: colors.glassBorder, boxShadow: '0px 18px 50px rgba(40,44,120,0.14)' } as any}>
+        <ConsentCheck error={tried} />
+        <Button title="Continue with phone" icon="call" onPress={guard(() => nav.navigate('PhoneSignIn'))} />
+        {google.available ? <Button title="Continue with Google" icon="logo-google" variant="secondary" loading={google.busy} onPress={guard(google.run)} /> : null}
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 22 }}>
+          <Pressable accessibilityRole="button" onPress={guard(() => nav.navigate('Register'))} style={{ minHeight: 48, justifyContent: 'center' }}><Txt bold color={colors.primary}>Use email</Txt></Pressable>
+          <Pressable accessibilityRole="button" onPress={() => nav.navigate('Login')} style={{ minHeight: 48, justifyContent: 'center' }}><Txt bold color={colors.sub}>Log in</Txt></Pressable>
+        </View>
+      </FadeIn>
     </Screen>
   );
 }

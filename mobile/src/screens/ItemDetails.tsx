@@ -103,15 +103,15 @@ export function ItemDetails() {
           {l.status === 'sold' ? <View style={{ position: 'absolute', left: 12, top: 12, backgroundColor: colors.text, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 6 }}><Txt bold color="#fff">SOLD</Txt></View> : null}
         </Animated.View>
 
-        <FadeIn style={{ padding: space.lg, gap: 10, backgroundColor: colors.bg }}>
+        <FadeIn style={{ padding: space.xl, gap: 10, backgroundColor: colors.sheet, borderTopLeftRadius: 32, borderTopRightRadius: 32, marginTop: -28, minHeight: 520 }}>
           <Txt variant="title">{l.title}</Txt>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Txt variant="hero" color={colors.primary}>{money(l.price)}</Txt>
             {l.seller.verified ? <Pill text="Verified seller" icon="shield-checkmark" color={colors.buy} bg={colors.buySoft} /> : null}
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            <Ionicons name="location" size={20} color={colors.sub} />
-            <Txt color={colors.sub}>{l.city}{l.distanceKm != null ? ` · ${l.distanceKm} km away` : ''} · {timeAgo(l.createdAt)}</Txt>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
+            <Ionicons name="location-outline" size={21} color={colors.sub} style={{ marginTop: 2 }} />
+            <Txt color={colors.sub} style={{ flex: 1 }}>{l.city}{l.distanceKm != null ? ` · ${l.distanceKm} km away` : ''} · {timeAgo(l.createdAt)}</Txt>
           </View>
           {l.seller.reviewCount ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Stars rating={l.seller.rating} /><Txt bold>{l.seller.rating}</Txt><Txt color={colors.sub}>({l.seller.reviewCount} reviews)</Txt></View> : null}
 
@@ -149,7 +149,7 @@ export function ItemDetails() {
 
       <Modal visible={buyOpen} transparent animationType="fade" onRequestClose={() => setBuyOpen(false)}>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: space.lg }}>
-          <View style={{ backgroundColor: '#fff', borderRadius: 24, padding: 20, gap: 12, width: '100%', maxWidth: 480, alignSelf: 'center' }}>
+          <View style={{ backgroundColor: colors.sheet, borderRadius: 28, padding: 22, gap: 12, width: '100%', maxWidth: 480, alignSelf: 'center' }}>
             {requested ? <>
               <View style={{ alignItems: 'center', gap: 10 }}>
                 <Ionicons name="checkmark-circle" size={72} color={colors.buy} />

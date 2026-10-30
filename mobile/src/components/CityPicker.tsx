@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Backdrop } from './Backdrop';
 import { Modal, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -45,7 +46,7 @@ export function CityField({ value, onChange, label, anywhere }: { value?: string
     <View style={{ marginBottom: space.lg }}>
       {label ? <Txt bold style={{ marginBottom: 6 }}>{label}</Txt> : null}
       <Pressable accessibilityRole="button" accessibilityLabel={`${label || 'City'}: ${value || 'not chosen'}. Tap to change`} onPress={() => setOpen(true)}
-        style={{ minHeight: 56, borderWidth: 2, borderColor: colors.line, borderRadius: radius.md, backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 10 }}>
+        style={{ minHeight: 56, borderWidth: 2, borderColor: colors.line, borderRadius: radius.md, backgroundColor: colors.glass, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 10 }}>
         <Ionicons name="location" size={24} color={colors.primary} />
         <View style={{ flex: 1 }}>
           <Txt bold>{current ? current.name : value || translate(anywhere ? 'Anywhere' : 'Choose your city')}</Txt>
@@ -55,7 +56,8 @@ export function CityField({ value, onChange, label, anywhere }: { value?: string
       </Pressable>
 
       <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)}>
-        <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insets.top }}>
+        <View style={{ flex: 1, paddingTop: insets.top }}>
+          <Backdrop />
           <View style={{ flexDirection: 'row', alignItems: 'center', padding: space.lg, gap: 8 }}>
             <Txt variant="h2" style={{ flex: 1 }}>Choose your city</Txt>
             <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => setOpen(false)} style={{ width: 48, height: 48, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="close" size={30} color={colors.text} /></Pressable>
@@ -63,7 +65,7 @@ export function CityField({ value, onChange, label, anywhere }: { value?: string
           <View style={{ paddingHorizontal: space.lg, gap: 10 }}>
             <Button title="Use my location" icon="navigate" variant="light" onPress={locate} loading={locating} />
             <TextInput accessibilityLabel="Search city or state" autoFocus value={q} onChangeText={setQ} placeholder={translate('Search city or state…')} placeholderTextColor="#7A8794"
-              style={{ minHeight: 56, borderWidth: 2, borderColor: colors.line, borderRadius: radius.pill, paddingHorizontal: 18, fontSize: 18 * scale, backgroundColor: '#fff', color: colors.text }} />
+              style={{ minHeight: 56, borderWidth: 2, borderColor: colors.line, borderRadius: radius.pill, paddingHorizontal: 18, fontSize: 18 * scale, backgroundColor: colors.glass, color: colors.text }} />
           </View>
           <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: insets.bottom + 24, gap: 8 }} keyboardShouldPersistTaps="handled">
             {anywhere ? <Row label={translate('Anywhere')} selected={!value} onPress={() => pick(undefined)} /> : null}
@@ -78,7 +80,7 @@ export function CityField({ value, onChange, label, anywhere }: { value?: string
 
 const Row = ({ label, sub, selected, onPress }: { label: string; sub?: string; selected?: boolean; onPress: () => void }) => (
   <Pressable accessibilityRole="button" accessibilityState={{ selected: !!selected }} onPress={onPress}
-    style={{ minHeight: 60, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: radius.md, paddingHorizontal: 16, borderWidth: 2, borderColor: selected ? colors.primary : 'transparent' }}>
+    style={{ minHeight: 60, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.glass, borderRadius: radius.md, paddingHorizontal: 16, borderWidth: 2, borderColor: selected ? colors.primary : 'transparent' }}>
     <View style={{ flex: 1 }}><Txt bold>{label}</Txt>{sub ? <Txt variant="small" color={colors.sub}>{sub}</Txt> : null}</View>
     {selected ? <Ionicons name="checkmark-circle" size={26} color={colors.primary} /> : null}
   </Pressable>

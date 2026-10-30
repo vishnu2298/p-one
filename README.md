@@ -25,8 +25,10 @@ labelled icons, plain language, and a built-in text-size setting (Normal / Large
 - **Affiliate tracking**: every "View deal" tap creates a tracked click, redirects with your affiliate tag, and conversions come back through a postback.
 - **Invite friends and family**: personal code and link, WhatsApp, SMS to contacts picked on the phone, share sheet. Invitees who join are auto-connected.
 - **Brand partners**: sponsored placements and a brand dashboard. See *Business model*.
-- **Made for India**: UPI "Pay with UPI" deep link, bargaining (make an offer), Call/WhatsApp after a deal is accepted, ₹ lakh/crore formatting, 32 cities with a searchable picker and "Use my location", English/Hindi/Tamil, WhatsApp share pages, community Groups, photos in chat. See [docs/INDIA_PLAN.md](docs/INDIA_PLAN.md).
+- **Made for India**: UPI "Pay with UPI" deep link, bargaining (make an offer), Call/WhatsApp after a deal is accepted, ₹ lakh/crore formatting, 32 cities with a searchable picker and "Use my location", WhatsApp share pages, community Groups, photos in chat. See [docs/INDIA_PLAN.md](docs/INDIA_PLAN.md).
 - **Compliance**: DPDP consent and data export, Terms/Privacy/Grievance Officer pages, operator takedown tools, prohibited-item filter, GST on brand invoices.
+- **Premium minimal glass design**: aurora backdrop, translucent glass cards, blurred headers, a floating glass tab bar, gradient actions. English only for now; Hindi and Tamil text is kept in `mobile/src/locales` and can be switched on later.
+- **Quick onboarding**: one welcome screen (agree, phone or Google, done), then name and city.
 - **Smooth feel**: skeleton loaders, gentle fade-ins, friendly toasts instead of pop-ups, warm colours and plain wording.
 - **Accessibility**: adjustable text size, high contrast palette, screen-reader labels, large touch targets, no gesture-only actions.
 

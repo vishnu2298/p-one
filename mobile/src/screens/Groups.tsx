@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Backdrop } from '../components/Backdrop';
 import { Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -34,7 +35,7 @@ export function GroupsTab() {
 
   return (
     <View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: radius.pill, borderWidth: 2, borderColor: colors.line, paddingHorizontal: 16, minHeight: 56, gap: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.glass, borderRadius: radius.pill, borderWidth: 2, borderColor: colors.line, paddingHorizontal: 16, minHeight: 56, gap: 10 }}>
         <Ionicons name="search" size={24} color={colors.primary} />
         <TextInput accessibilityLabel="Search groups" value={q} onChangeText={setQ} placeholder={translate('Search groups…')} placeholderTextColor="#7A8794" style={{ flex: 1, fontSize: 18 * scale, color: colors.text, minHeight: 52 }} />
       </View>
@@ -81,7 +82,8 @@ function CreateGroup({ visible, onClose, onCreated }: { visible: boolean; onClos
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insets.top }}>
+        <View style={{ flex: 1, paddingTop: insets.top }}>
+          <Backdrop />
           <View style={{ flexDirection: 'row', alignItems: 'center', padding: space.lg }}>
             <Txt variant="h2" style={{ flex: 1 }}>Create a group</Txt>
             <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} style={{ width: 48, height: 48, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="close" size={30} color={colors.text} /></Pressable>
@@ -92,7 +94,7 @@ function CreateGroup({ visible, onClose, onCreated }: { visible: boolean; onClos
             <Input label="Topic (optional)" value={f.interest} onChangeText={(v) => setF({ ...f, interest: v })} placeholder="e.g. Cooking" maxLength={40} />
             <CityField label="City" anywhere value={f.city || undefined} onChange={(c) => setF({ ...f, city: c || '' })} />
           </ScrollView>
-          <View style={{ padding: space.lg, paddingBottom: insets.bottom + space.md, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: colors.line }}>
+          <View style={{ padding: space.lg, paddingBottom: insets.bottom + space.md, backgroundColor: colors.glass, borderTopWidth: 1, borderTopColor: colors.line }}>
             <Button title="Create a group" icon="checkmark-circle" onPress={create} loading={busy} disabled={f.name.trim().length < 3} />
           </View>
         </View>
@@ -193,7 +195,7 @@ export function GroupScreen() {
               );
             })}
           </ScrollView>
-          <View style={{ backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: colors.line, padding: 10, paddingBottom: insets.bottom + 8, flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
+          <View style={{ backgroundColor: colors.glass, borderTopWidth: 1, borderTopColor: colors.line, padding: 10, paddingBottom: insets.bottom + 8, flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
             <Pressable accessibilityRole="button" accessibilityLabel="Send a photo" onPress={sendPhoto} style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="image" size={26} color={colors.primary} /></Pressable>
             <TextInput accessibilityLabel="Type a message" value={text} onChangeText={setText} placeholder={translate('Type a message…')} placeholderTextColor="#7A8794" multiline maxLength={1000} style={{ flex: 1, minHeight: 52, maxHeight: 120, borderRadius: 26, borderWidth: 2, borderColor: colors.line, paddingHorizontal: 18, paddingVertical: 12, fontSize: 18 * scale, color: colors.text }} />
             <Pressable accessibilityRole="button" accessibilityLabel="Send message" onPress={() => send(text)} disabled={!text.trim() || sending} style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', opacity: !text.trim() || sending ? 0.4 : 1 }}><Ionicons name="send" size={24} color="#fff" /></Pressable>
@@ -203,7 +205,7 @@ export function GroupScreen() {
 
       <Modal visible={showMembers} transparent animationType="slide" onRequestClose={() => setShowMembers(false)}>
         <Pressable accessibilityLabel="Close" onPress={() => setShowMembers(false)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' }}>
-          <Pressable onPress={() => {}} style={{ backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: space.lg, paddingBottom: insets.bottom + 16, maxHeight: '80%', width: '100%', maxWidth: 640, alignSelf: 'center' }}>
+          <Pressable onPress={() => {}} style={{ backgroundColor: colors.sheet, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: space.lg, paddingBottom: insets.bottom + 16, maxHeight: '80%', width: '100%', maxWidth: 640, alignSelf: 'center' }}>
             <Txt variant="title" style={{ marginBottom: 8 }}>Members</Txt>
             <ScrollView>
               {info.data.members.map((m) => (

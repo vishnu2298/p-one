@@ -1,36 +1,27 @@
 import React, { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Animated, Pressable, ScrollView, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../api';
-import { useAuth } from '../context';
+import { useAuth, useSettings } from '../context';
 import { useLoad } from '../hooks';
-import { Card, Empty, ErrorState, FadeIn, Screen, SectionTitle, SkeletonCardGrid, Skeleton, Txt, IconName } from '../ui';
-import { ScrollView } from 'react-native';
+import { Empty, ErrorState, FadeIn, IconName, Screen, SectionTitle, Skeleton, SkeletonCardGrid, Txt } from '../ui';
 import { DealCard } from '../components/DealCard';
 import { SponsoredCard, useAds } from '../components/Sponsored';
-import { Product } from '../types';
-import { Hero, HeroSlide, useRotating } from '../motion';
-import { translate } from '../i18n';
-import { useSettings } from '../context';
-import { Animated } from 'react-native';
-import { colors, radius, shadow, space } from '../theme';
-import { CATEGORIES } from '../categories';
-import { Listing } from '../types';
 import { ListingGrid, toggleFavorite } from '../components/ListingCard';
-import { Logo } from '../components/Logo';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Hero, HeroSlide, haptic, useRotating } from '../motion';
+import { colors, radius, shadow, space } from '../theme';
+import { Listing, Product } from '../types';
 
-function BigAction({ icon, title, hint, color, bg, onPress }: { icon: IconName; title: string; hint: string; color: string; bg: string; onPress: () => void }) {
+const EXAMPLES = ['iPhone', 'sofa set', 'bicycle', 'tuition', 'sarees'];
+
+function Quick({ icon, label, tint, onPress }: { icon: IconName; label: string; tint: string; onPress: () => void }) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`${title}. ${hint}`} onPress={onPress}
-      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 16, backgroundColor: '#fff', borderRadius: radius.lg, padding: 16, minHeight: 92, borderLeftWidth: 8, borderLeftColor: color, opacity: pressed ? 0.9 : 1, ...shadow })}>
-      <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}><Ionicons name={icon} size={32} color={color} /></View>
-      <View style={{ flex: 1 }}>
-        <Txt variant="h2" color={color}>{title}</Txt>
-        <Txt variant="small" color={colors.sub}>{hint}</Txt>
-      </View>
-      <Ionicons name="chevron-forward" size={28} color={color} />
+    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={() => { haptic.tap(); onPress(); }}
+      style={({ pressed }) => ({ flex: 1, minHeight: 108, borderRadius: radius.lg, backgroundColor: colors.glass, borderWidth: 1, borderColor: colors.glassBorder, alignItems: 'center', justifyContent: 'center', gap: 10, transform: [{ scale: pressed ? 0.96 : 1 }], ...shadow })}>
+      <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: tint + '1F', alignItems: 'center', justifyContent: 'center' }}><Ionicons name={icon} size={28} color={tint} /></View>
+      <Txt bold>{label}</Txt>
     </Pressable>
   );
 }
@@ -38,89 +29,68 @@ function BigAction({ icon, title, hint, color, bg, onPress }: { icon: IconName; 
 export function Home() {
   const nav = useNavigation<any>();
   const { user } = useAuth();
+  const { scale } = useSettings();
   const insets = useSafeAreaInsets();
   const feed = useLoad(() => api<{ listings: Listing[] }>('/listings?limit=6&sort=nearest'), []);
   const unread = useLoad(() => api<{ messages: number; requests: number; notifications: number }>('/unread-count'), []);
   const deals = useLoad(() => api<{ products: Product[] }>('/products?limit=8'), []);
   const ads = useAds('home');
-  const hour = new Date().getHours();
-  const { lang, scale } = useSettings();
-  const hello = translate(hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening');
-  const EXAMPLES: Record<string, string[]> = { en: ['iPhone', 'sofa set', 'bicycle', 'tuition', 'sarees'], hi: ['iPhone', 'सोफ़ा', 'साइकिल', 'ट्यूशन', 'साड़ी'], ta: ['iPhone', 'சோபா', 'சைக்கிள்', 'டியூஷன்', 'புடவை'] };
-  const hint = useRotating(EXAMPLES[lang] || EXAMPLES.en);
-  const slides: HeroSlide[] = [
-    { id: 'sell', title: translate('Sell what you don\'t'), text: translate('Add photos, set a price and your item is live in a minute.'), icon: 'pricetag', colors: ['#C2410C', '#EA7A3B'], cta: translate('Sell an item'), onPress: () => nav.navigate('SellItem') },
-    { id: 'deals', title: translate("Today's deals"), text: translate('Top offers, updated daily'), icon: 'flash', colors: ['#1747C6', '#4F7BEA'], cta: translate('See all'), onPress: () => nav.navigate('Deals') },
-    { id: 'invite', title: translate('Bring your people'), text: translate('Invite friends and family'), icon: 'gift', colors: ['#12794A', '#37A874'], cta: translate('Invite friends and family'), onPress: () => nav.navigate('Invite') },
-  ];
+  const hint = useRotating(EXAMPLES);
   const [, force] = useState(0);
+  const hour = new Date().getHours();
+  const hello = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const badge = unread.data?.notifications || 0;
 
-  const header = (
-    <View style={{ paddingTop: insets.top + 8, paddingHorizontal: space.lg, paddingBottom: 12, backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderBottomColor: colors.line }}>
-      <Logo size={44} />
-      <View style={{ flex: 1 }}>
-        <Txt variant="small" color={colors.sub}>{hello} 👋</Txt>
-        <Txt variant="h2" numberOfLines={1}>{user?.name.split(' ')[0]}</Txt>
-      </View>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Notifications${badge ? `, ${badge} new` : ''}`} onPress={() => nav.navigate('Notifications')} style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}>
-        <Ionicons name="notifications" size={26} color={colors.primary} />
-        {badge ? <View style={{ position: 'absolute', top: 4, right: 4, minWidth: 22, height: 22, borderRadius: 11, backgroundColor: colors.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}><Txt variant="tiny" bold color="#fff" style={{ lineHeight: 16 }}>{badge}</Txt></View> : null}
-      </Pressable>
-    </View>
-  );
-
+  const slides: HeroSlide[] = [
+    { id: 'sell', title: "Sell what you don't need", text: 'Add photos, set a price, done in a minute.', icon: 'pricetag', colors: ['#4F46E5', '#7C3AED'], cta: 'Start selling', onPress: () => nav.navigate('SellItem') },
+    { id: 'deals', title: "Today's deals", text: 'Top offers from online stores, updated daily.', icon: 'flash', colors: ['#0E8A5F', '#14B8A6'], cta: 'See deals', onPress: () => nav.navigate('Deals') },
+    { id: 'invite', title: 'Bring your people', text: 'Invite friends and family to Connectly.', icon: 'gift', colors: ['#D9480F', '#F59E0B'], cta: 'Invite', onPress: () => nav.navigate('Invite') },
+  ];
   const items = feed.data?.listings || [];
+
   return (
-    <Screen header={header} refresh={{ refreshing: feed.refreshing, onRefresh: () => { feed.refresh(); void unread.reload(true); void deals.reload(true); } }}>
+    <Screen refresh={{ refreshing: feed.refreshing, onRefresh: () => { feed.refresh(); void unread.reload(true); void deals.reload(true); } }} contentStyle={{ paddingTop: insets.top + 14 }}>
+      <FadeIn style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+        <View>
+          <Txt variant="small" color={colors.sub}>{hello}</Txt>
+          <Txt variant="title" numberOfLines={1}>{user?.name.split(' ')[0]}</Txt>
+        </View>
+        <Pressable accessibilityRole="button" accessibilityLabel={`Notifications${badge ? `, ${badge} new` : ''}`} onPress={() => nav.navigate('Notifications')}
+          style={({ pressed }) => ({ width: 54, height: 54, borderRadius: 27, backgroundColor: colors.glass, borderWidth: 1, borderColor: colors.glassBorder, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.7 : 1, ...shadow })}>
+          <Ionicons name="notifications-outline" size={26} color={colors.text} />
+          {badge ? <View style={{ position: 'absolute', top: 10, right: 11, width: 12, height: 12, borderRadius: 6, backgroundColor: colors.danger, borderWidth: 2, borderColor: '#fff' }} /> : null}
+        </Pressable>
+      </FadeIn>
+
       <Pressable accessibilityRole="search" accessibilityLabel="Search products, services or people" onPress={() => nav.navigate('Search')}
-        style={{ minHeight: 60, borderRadius: radius.pill, backgroundColor: '#fff', borderWidth: 2, borderColor: colors.line, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, gap: 12 }}>
-        <Ionicons name="search" size={26} color={colors.primary} />
-        <Animated.Text numberOfLines={1} style={[{ fontSize: 18 * scale, color: colors.sub, flex: 1 }, hint.style as any]}>{translate('Search')} “{hint.text}”</Animated.Text>
+        style={{ minHeight: 60, borderRadius: radius.pill, backgroundColor: colors.glassStrong, borderWidth: 1, borderColor: colors.glassBorder, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, gap: 12, ...shadow }}>
+        <Ionicons name="search" size={22} color={colors.sub} />
+        <Animated.Text numberOfLines={1} style={[{ fontSize: 18 * scale, color: colors.sub, flex: 1 }, hint.style as any]}>Search “{hint.text}”</Animated.Text>
       </Pressable>
+
+      <FadeIn index={1} style={{ flexDirection: 'row', gap: 12, marginTop: space.lg }}>
+        <Quick icon="bag-handle-outline" label="Buy" tint={colors.buy} onPress={() => nav.navigate('Listings', {})} />
+        <Quick icon="pricetag-outline" label="Sell" tint={colors.sell} onPress={() => nav.navigate('SellItem')} />
+        <Quick icon="people-outline" label="Connect" tint={colors.primary} onPress={() => nav.navigate('Connect')} />
+      </FadeIn>
 
       <View style={{ marginTop: space.lg }}><Hero slides={slides} /></View>
 
-      <View style={{ gap: 12, marginTop: space.lg }}>
-        <BigAction icon="cart" title="Buy" hint="Find what you need nearby" color={colors.buy} bg={colors.buySoft} onPress={() => nav.navigate('Listings', {})} />
-        <BigAction icon="pricetag" title="Sell" hint="List your items" color={colors.sell} bg={colors.sellSoft} onPress={() => nav.navigate('SellItem')} />
-        <BigAction icon="people" title="Connect" hint="Meet people nearby" color={colors.connect} bg={colors.connectSoft} onPress={() => nav.navigate('Connect')} />
-      </View>
-
       <SectionTitle title="Today's deals" action="See all" onAction={() => nav.navigate('Deals')} />
       {deals.loading && !deals.data ? (
-        <View style={{ flexDirection: 'row', gap: 12 }}>{[0, 1].map((i) => <Skeleton key={i} width={190} height={290} radius={24} />)}</View>
+        <View style={{ flexDirection: 'row', gap: 12 }}>{[0, 1].map((i) => <Skeleton key={i} width={190} height={290} radius={28} />)}</View>
       ) : deals.data?.products.length ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 8 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 8, paddingBottom: 12 }} style={{ marginHorizontal: -space.lg, paddingHorizontal: space.lg }}>
           {deals.data.products.map((p, i) => <FadeIn key={p.id} index={i}><DealCard p={p} width={190} /></FadeIn>)}
         </ScrollView>
       ) : <Txt color={colors.sub}>Deals will appear here shortly.</Txt>}
-      {ads.length ? <View style={{ marginTop: space.lg, gap: 10 }}>{ads.slice(0, 1).map((a) => <SponsoredCard key={a.id} ad={a} />)}</View> : null}
-
-      <SectionTitle title="Popular categories" action="See all" onAction={() => nav.navigate('Explore')} />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-        {CATEGORIES.slice(0, 8).map((c) => (
-          <Pressable key={c.id} accessibilityRole="button" accessibilityLabel={c.name} onPress={() => nav.navigate('Listings', { category: c.id })}
-            style={{ width: '23%', flexGrow: 1, minWidth: 74, alignItems: 'center', gap: 6, paddingVertical: 8 }}>
-            <View style={{ width: 64, height: 64, borderRadius: 20, backgroundColor: c.bg, alignItems: 'center', justifyContent: 'center' }}><Ionicons name={c.icon as any} size={32} color={c.color} /></View>
-            <Txt variant="tiny" bold center numberOfLines={2}>{c.name}</Txt>
-          </Pressable>
-        ))}
-      </View>
+      {ads.length ? <View style={{ marginTop: space.md }}>{ads.slice(0, 1).map((a) => <SponsoredCard key={a.id} ad={a} />)}</View> : null}
 
       <SectionTitle title="Near you" action="See all" onAction={() => nav.navigate('Listings', { sort: 'nearest' })} />
       {feed.loading && !feed.data ? <SkeletonCardGrid /> : feed.error && !feed.data ? <ErrorState message={feed.error} retry={() => feed.reload()} /> :
-        items.length === 0 ? <Empty icon="pricetag" title="Nothing listed yet" text="Be the first to sell something in your area." action={{ title: 'Sell an item', onPress: () => nav.navigate('SellItem') }} /> :
+        items.length === 0 ? <Empty icon="pricetag-outline" title="Nothing listed yet" text="Be the first to sell something in your area." action={{ title: 'Sell an item', onPress: () => nav.navigate('SellItem') }} /> :
           <ListingGrid items={items} onOpen={(l) => nav.navigate('ItemDetails', { id: l.id })}
             onToggleFav={(l) => toggleFavorite(l, (next) => { feed.setData({ listings: items.map((x) => (x.id === next.id ? next : x)) }); force((n) => n + 1); })} />}
-
-      <Card style={{ marginTop: space.xl, backgroundColor: colors.buySoft, flexDirection: 'row', gap: 12, alignItems: 'center' }} onPress={() => nav.navigate('Safety')}>
-        <Ionicons name="shield-checkmark" size={40} color={colors.buy} />
-        <View style={{ flex: 1 }}>
-          <Txt bold color={colors.buy}>Trusted. Safe. Simple.</Txt>
-          <Txt variant="small" color={colors.text}>Read our safety tips before you meet or pay anyone.</Txt>
-        </View>
-      </Card>
     </Screen>
   );
 }

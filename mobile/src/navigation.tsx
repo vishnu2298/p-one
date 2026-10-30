@@ -8,9 +8,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from './api';
 import { useAuth } from './context';
 import { Loading, Txt } from './ui';
-import { colors } from './theme';
+import { colors, shadow } from './theme';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Logo } from './components/Logo';
-import { Login, Onboarding, Register, Welcome } from './screens/Auth';
+import { Login, Register, Welcome } from './screens/Auth';
 import { Home } from './screens/Home';
 import { Explore, Listings, Search } from './screens/Browse';
 import { ItemDetails } from './screens/ItemDetails';
@@ -55,9 +57,11 @@ function SellPulse() {
     return () => loop.stop();
   }, [v]);
   return (
-    <View style={{ width: 66, height: 66, alignItems: 'center', justifyContent: 'center' }}>
-      <Animated.View style={{ position: 'absolute', width: 66, height: 66, borderRadius: 33, backgroundColor: colors.sell, opacity: v.interpolate({ inputRange: [0, 1], outputRange: [0.28, 0] }), transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [1, 1.5] }) }] }} />
-      <View style={{ width: 66, height: 66, borderRadius: 33, backgroundColor: colors.sell, alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: '#fff', boxShadow: '0px 4px 12px rgba(194,65,12,0.4)' }}><Ionicons name="add" size={42} color="#fff" /></View>
+    <View style={{ width: 62, height: 62, alignItems: 'center', justifyContent: 'center' }}>
+      <Animated.View style={{ position: 'absolute', width: 62, height: 62, borderRadius: 31, backgroundColor: colors.primary, opacity: v.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0] }), transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [1, 1.55] }) }] }} />
+      <LinearGradient colors={[colors.primary, colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 62, height: 62, borderRadius: 31, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'rgba(255,255,255,0.95)', boxShadow: '0px 10px 24px rgba(79,70,229,0.45)' } as any}>
+        <Ionicons name="add" size={38} color="#fff" />
+      </LinearGradient>
     </View>
   );
 }
@@ -75,13 +79,18 @@ function TabBar({ state, navigation }: any) {
 
   const items = [state.routes[0], state.routes[1], { key: 'sell', name: 'Sell' }, state.routes[2], state.routes[3]];
   return (
-    <View accessibilityRole="tablist" style={{ flexDirection: 'row', backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: colors.line, paddingBottom: insets.bottom + 6, paddingTop: 6, alignItems: 'flex-end' }}>
+    <View style={{ paddingHorizontal: 14, paddingBottom: insets.bottom + 8, paddingTop: 22 }}>
+    {/* The glass pill is a separate clipped layer so the raised Sell button can rise above it. */}
+    <View pointerEvents="none" style={{ position: 'absolute', left: 14, right: 14, top: 22, bottom: insets.bottom + 8, borderRadius: 32, overflow: 'hidden', borderWidth: 1, borderColor: colors.glassBorder, ...shadow }}>
+      <BlurView intensity={70} tint="light" experimentalBlurMethod="dimezisBlurView" style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.55)' }} />
+    </View>
+    <View accessibilityRole="tablist" style={{ flexDirection: 'row', paddingTop: 8, paddingBottom: 8, alignItems: 'flex-end' }}>
       {items.map((r: any) => {
         if (r.name === 'Sell') {
           return (
             <Pressable key="sell" accessibilityRole="button" accessibilityLabel="Sell an item" onPress={() => { haptic.tap(); root.navigate('SellItem'); }} style={{ flex: 1, alignItems: 'center', marginTop: -26 }}>
               <SellPulse />
-              <Txt variant="tiny" bold color={colors.sell}>Sell</Txt>
+              <Txt variant="tiny" bold color={colors.primary}>Sell</Txt>
             </Pressable>
           );
         }
@@ -90,7 +99,7 @@ function TabBar({ state, navigation }: any) {
         return (
           <Pressable key={r.key} accessibilityRole="tab" accessibilityLabel={label} accessibilityState={{ selected: focused }} onPress={() => { if (!focused) { haptic.tap(); navigation.navigate(r.name); } }} style={{ flex: 1, alignItems: 'center', minHeight: 56, justifyContent: 'center', gap: 2 }}>
             <View>
-              <Pop trigger={focused}><Ionicons name={(focused ? on : off) as any} size={28} color={focused ? colors.primary : colors.sub} /></Pop>
+              <Pop trigger={focused}><Ionicons name={(focused ? on : off) as any} size={27} color={focused ? colors.primary : colors.sub} /></Pop>
               {r.name === 'Messages' && badge ? <View style={{ position: 'absolute', top: -4, right: -10, minWidth: 22, height: 22, borderRadius: 11, backgroundColor: colors.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}><Txt variant="tiny" bold color="#fff" style={{ lineHeight: 16 }}>{badge > 9 ? '9+' : badge}</Txt></View> : null}
             </View>
             <Txt variant="tiny" bold color={focused ? colors.primary : colors.sub}>{label}</Txt>
@@ -98,12 +107,13 @@ function TabBar({ state, navigation }: any) {
         );
       })}
     </View>
+    </View>
   );
 }
 
 function MainTabs() {
   return (
-    <Tabs.Navigator tabBar={(p) => <TabBar {...p} />} screenOptions={{ headerShown: false, animation: 'fade' }}>
+    <Tabs.Navigator tabBar={(p) => <TabBar {...p} />} screenOptions={{ headerShown: false, animation: 'fade', sceneStyle: { backgroundColor: 'transparent' } }}>
       <Tabs.Screen name="Home" component={Home} />
       <Tabs.Screen name="Explore" component={Explore} />
       <Tabs.Screen name="Messages" component={Messages} />
@@ -112,10 +122,10 @@ function MainTabs() {
   );
 }
 
-const theme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: colors.bg, primary: colors.primary } };
+const theme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: 'transparent', card: 'transparent', primary: colors.primary } };
 
 export function RootNavigator() {
-  const { ready, user, seenOnboarding } = useAuth();
+  const { ready, user } = useAuth();
   // connectly://item/123 (from a shared WhatsApp link) opens that item once signed in.
   const pendingItem = useRef<number | null>(null);
   useEffect(() => {
@@ -145,10 +155,8 @@ export function RootNavigator() {
   if (!ready) return <AnimatedSplash />;
   return (
     <NavigationContainer theme={theme} ref={navRef}>
-      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
-        {!seenOnboarding ? (
-          <Stack.Screen name="Onboarding" component={Onboarding} />
-        ) : !user ? (
+      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: 'transparent' } }}>
+        {!user ? (
           <>
             <Stack.Screen name="Welcome" component={Welcome} />
             <Stack.Screen name="PhoneSignIn" component={PhoneSignIn} />

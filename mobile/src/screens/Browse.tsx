@@ -5,7 +5,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { api, storage } from '../api';
 import { useLoad, useDebounced } from '../hooks';
 import { Avatar, Button, Card, Chip, Empty, ErrorState, Header, Loading, Pill, Screen, Stars, Txt, Row, SkeletonCardGrid, SkeletonRows } from '../ui';
-import { colors, radius, space } from '../theme';
+import { colors, radius, shadow, space } from '../theme';
 import { CATEGORIES, CITIES, catById } from '../categories';
 import { Listing, Category, UserBrief } from '../types';
 import { ListingGrid, toggleFavorite } from '../components/ListingCard';
@@ -57,7 +57,7 @@ export function Listings() {
           <Ionicons name="options" size={22} color={colors.primary} /><Txt bold color={colors.primary}>Filter{active ? ` (${active})` : ''}</Txt>
         </Pressable>} />}
       refresh={{ refreshing: res.refreshing, onRefresh: res.refresh }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: radius.pill, borderWidth: 2, borderColor: colors.line, paddingHorizontal: 16, minHeight: 56, gap: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.glass, borderRadius: radius.pill, borderWidth: 2, borderColor: colors.line, paddingHorizontal: 16, minHeight: 56, gap: 10 }}>
         <Ionicons name="search" size={24} color={colors.primary} />
         <TextInput accessibilityLabel="Search items" value={q} onChangeText={(v) => { setQ(v); setLimit(PAGE); }} placeholder="Search items…" placeholderTextColor="#7A8794" style={{ flex: 1, fontSize: 18 * scale, color: colors.text, minHeight: 52 }} returnKeyType="search" />
         {q ? <Pressable accessibilityRole="button" accessibilityLabel="Clear search" onPress={() => setQ('')} hitSlop={10}><Ionicons name="close-circle" size={26} color={colors.sub} /></Pressable> : null}
@@ -86,7 +86,7 @@ function FilterSheet({ visible, onClose, sort, setSort, city, setCity, price, se
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable accessibilityLabel="Close filters" onPress={onClose} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' }}>
-        <Pressable onPress={() => {}} style={{ backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: space.lg, paddingBottom: insets.bottom + 16, maxHeight: '88%', width: '100%', maxWidth: 640, alignSelf: 'center' }}>
+        <Pressable onPress={() => {}} style={{ backgroundColor: colors.sheet, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: space.lg, paddingBottom: insets.bottom + 16, maxHeight: '88%', width: '100%', maxWidth: 640, alignSelf: 'center' }}>
           <ScrollView>
             <Txt variant="title" style={{ marginBottom: 12 }}>Filter and sort</Txt>
             <Txt bold style={{ marginBottom: 8 }}>Sort by</Txt>
@@ -109,16 +109,16 @@ export function Explore() {
   const counts = Object.fromEntries((cats.data?.categories || []).map((c) => [c.id, c.count]));
   return (
     <Screen header={<Header title="Explore" back={false} />} refresh={{ refreshing: cats.refreshing, onRefresh: cats.refresh }}>
-      <Pressable accessibilityRole="search" onPress={() => nav.navigate('Search')} style={{ minHeight: 60, borderRadius: radius.pill, backgroundColor: '#fff', borderWidth: 2, borderColor: colors.line, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, gap: 12, marginBottom: space.lg }}>
+      <Pressable accessibilityRole="search" onPress={() => nav.navigate('Search')} style={{ minHeight: 60, borderRadius: radius.pill, backgroundColor: colors.glass, borderWidth: 2, borderColor: colors.line, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, gap: 12, marginBottom: space.lg }}>
         <Ionicons name="search" size={26} color={colors.primary} /><Txt color={colors.sub}>Search categories or items…</Txt>
       </Pressable>
       <Row icon="pricetags" label="Deals from online stores" value="Top offers, updated daily" onPress={() => nav.navigate('Deals')} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 8 }}>
         {CATEGORIES.map((c) => (
           <Pressable key={c.id} accessibilityRole="button" accessibilityLabel={`${c.name}. ${c.hint}`} onPress={() => nav.navigate('Listings', { category: c.id })}
-            style={({ pressed }) => ({ width: '47.5%', flexGrow: 1, flexBasis: '45%', backgroundColor: c.bg, borderRadius: radius.lg, padding: 16, minHeight: 150, gap: 6, opacity: pressed ? 0.9 : 1 })}>
-            <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}><Ionicons name={c.icon as any} size={30} color={c.color} /></View>
-            <Txt bold color={c.color} style={{ fontSize: undefined }}>{c.name}</Txt>
+            style={({ pressed }) => ({ width: '47.5%', flexGrow: 1, flexBasis: '45%', backgroundColor: colors.glass, borderWidth: 1, borderColor: colors.glassBorder, borderRadius: radius.lg, padding: 16, minHeight: 150, gap: 6, transform: [{ scale: pressed ? 0.97 : 1 }], ...shadow })}>
+            <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: c.bg, alignItems: 'center', justifyContent: 'center' }}><Ionicons name={c.icon as any} size={28} color={c.color} /></View>
+            <Txt bold style={{ fontSize: undefined }}>{c.name}</Txt>
             <Txt variant="tiny" color={colors.text}>{c.hint}</Txt>
             {counts[c.id] ? <Txt variant="tiny" bold color={c.color}>{counts[c.id]} listed</Txt> : null}
           </Pressable>
@@ -160,7 +160,7 @@ export function Search() {
 
   return (
     <Screen header={<Header title="Search" />}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: radius.pill, borderWidth: 2, borderColor: colors.primary, paddingHorizontal: 16, minHeight: 58, gap: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.glass, borderRadius: radius.pill, borderWidth: 2, borderColor: colors.primary, paddingHorizontal: 16, minHeight: 58, gap: 10 }}>
         <Ionicons name="search" size={24} color={colors.primary} />
         <TextInput autoFocus accessibilityLabel="Search" value={q} onChangeText={setQ} placeholder="Items, services or people…" placeholderTextColor="#7A8794" style={{ flex: 1, fontSize: 18 * scale, color: colors.text, minHeight: 52 }} returnKeyType="search" onSubmitEditing={() => q.trim() && remember(q.trim())} />
         {q ? <Pressable accessibilityRole="button" accessibilityLabel="Clear" onPress={() => setQ('')} hitSlop={10}><Ionicons name="close-circle" size={26} color={colors.sub} /></Pressable> : null}

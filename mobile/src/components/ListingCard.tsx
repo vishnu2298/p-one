@@ -22,9 +22,9 @@ export function ListingImage({ listing, height, iconSize = 48 }: { listing: Pick
 export function ListingCard({ listing, onPress, onToggleFav, width }: { listing: Listing; onPress: () => void; onToggleFav?: (l: Listing) => void; width?: number | string }) {
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={`${listing.title}, ${moneyShort(listing.price)}`} onPress={onPress}
-      style={({ pressed }) => ({ width: width as any, backgroundColor: '#fff', borderRadius: radius.lg, overflow: 'hidden', opacity: pressed ? 0.92 : 1, ...shadow })}>
+      style={({ pressed }) => ({ width: width as any, backgroundColor: colors.glass, borderRadius: radius.lg, overflow: 'hidden', borderWidth: 1, borderColor: colors.glassBorder, transform: [{ scale: pressed ? 0.98 : 1 }], ...shadow })}>
       <View>
-        <ListingImage listing={listing} height={130} />
+        <ListingImage listing={listing} height={140} />
         {listing.status === 'sold' ? (
           <View style={{ position: 'absolute', left: 8, top: 8, backgroundColor: colors.text, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}><Txt variant="tiny" bold color="#fff">SOLD</Txt></View>
         ) : null}
@@ -37,7 +37,7 @@ export function ListingCard({ listing, onPress, onToggleFav, width }: { listing:
       </View>
       <View style={{ padding: 12, gap: 2 }}>
         <Txt bold numberOfLines={2} style={{ minHeight: 46 }}>{listing.title}</Txt>
-        <Txt variant="h2" color={colors.primary}>{moneyShort(listing.price)}</Txt>
+        <Txt variant="h2">{moneyShort(listing.price)}</Txt>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           <Ionicons name="location" size={15} color={colors.sub} />
           <Txt variant="tiny" color={colors.sub} style={{ flex: 1 }}>{listing.city}{listing.distanceKm != null ? ` · ${listing.distanceKm} km` : ''}</Txt>

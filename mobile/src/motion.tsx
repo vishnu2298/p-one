@@ -83,10 +83,10 @@ export function Segmented<T extends string>({ options, value, onChange }: { opti
     else Animated.spring(x, { toValue: idx * seg, friction: 9, tension: 120, useNativeDriver: native }).start();
   }, [idx, seg, x]);
   return (
-    <View onLayout={(e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width)} accessibilityRole="tablist" style={{ flexDirection: 'row', backgroundColor: colors.primarySoft, borderRadius: 16, padding: 4, marginBottom: 14 }}>
-      {seg ? <Animated.View style={{ position: 'absolute', top: 4, left: 4, width: seg, height: 52, borderRadius: 12, backgroundColor: '#fff', transform: [{ translateX: x }], ...shadow }} /> : null}
+    <View onLayout={(e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width)} accessibilityRole="tablist" style={{ flexDirection: 'row', backgroundColor: 'rgba(16,18,31,0.06)', borderRadius: 20, padding: 4, marginBottom: 14 }}>
+      {seg ? <Animated.View style={{ position: 'absolute', top: 4, left: 4, width: seg, height: 52, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.95)', transform: [{ translateX: x }], ...shadow }} /> : null}
       {options.map((o) => (
-        <Pressable key={o.id} accessibilityRole="tab" accessibilityState={{ selected: o.id === value }} onPress={() => { if (o.id !== value) { haptic.tap(); onChange(o.id); } }} style={{ flex: 1, minHeight: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
+        <Pressable key={o.id} accessibilityRole="tab" accessibilityState={{ selected: o.id === value }} onPress={() => { if (o.id !== value) { haptic.tap(); onChange(o.id); } }} style={{ flex: 1, minHeight: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
           <Txt bold center color={o.id === value ? colors.primary : colors.sub} numberOfLines={2}>{o.label}</Txt>
         </Pressable>
       ))}
@@ -129,12 +129,12 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
   return (
     <View>
       <Pressable accessibilityRole="button" accessibilityLabel={`${s.title}. ${s.text}`} onPress={() => { haptic.tap(); s.onPress(); }} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
-        <LinearGradient colors={s.colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ borderRadius: radius.lg, padding: 20, minHeight: 148, overflow: 'hidden' }}>
+        <LinearGradient colors={s.colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ borderRadius: 32, padding: 22, minHeight: 156, overflow: 'hidden', boxShadow: '0px 16px 36px rgba(79,70,229,0.25)' } as any}>
           <Ionicons name={s.icon} size={150} color="rgba(255,255,255,0.16)" style={{ position: 'absolute', right: -20, bottom: -26 }} />
           <Animated.View style={{ opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }], gap: 6, maxWidth: '78%' }}>
             <Txt variant="h2" color="#fff">{s.title}</Txt>
             <Txt color="rgba(255,255,255,0.94)">{s.text}</Txt>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.22)', alignSelf: 'flex-start', borderRadius: 999, paddingVertical: 8, paddingHorizontal: 14, marginTop: 6 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.24)', alignSelf: 'flex-start', borderRadius: 999, paddingVertical: 8, paddingHorizontal: 14, marginTop: 6 }}>
               <Txt bold color="#fff">{s.cta}</Txt><Ionicons name="arrow-forward" size={18} color="#fff" />
             </View>
           </Animated.View>
@@ -160,7 +160,7 @@ export function AnimatedSplash() {
     ]).start();
   }, [logo, ring, text]);
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 18 }}>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 18 }}>
       <View style={{ alignItems: 'center', justifyContent: 'center' }}>
         <Animated.View style={{ position: 'absolute', width: 120, height: 120, borderRadius: 60, borderWidth: 3, borderColor: colors.primary, opacity: ring.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] }), transform: [{ scale: ring.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1.9] }) }] }} />
         <Animated.View style={{ transform: [{ scale: logo }], opacity: logo }}><Logo size={104} /></Animated.View>

@@ -70,7 +70,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     setUnauthorizedHandler(() => { void signOut(); });
     (async () => {
       const [t, seen, size, savedLang] = await Promise.all([storage.get('token'), storage.get('seenOnboarding'), storage.get('textSize'), storage.get('lang')]);
-      if (savedLang === 'en' || savedLang === 'hi' || savedLang === 'ta') { setLangState(savedLang); setCurrentLang(savedLang); } else setLangChosen(false);
+      void savedLang; // English only for now; stored language is ignored until more languages ship
       if (seen) setSeen(true);
       if (size === 'normal' || size === 'large' || size === 'xlarge') setTextSizeState(size);
       if (t) {

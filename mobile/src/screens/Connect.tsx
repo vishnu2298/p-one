@@ -59,7 +59,7 @@ export function Connect() {
       <Segmented options={[{ id: 'nearby', label: 'People' }, { id: 'mine', label: 'Friends' }, { id: 'groups', label: 'Groups' }]} value={tab} onChange={setTab} />
 
       {tab === 'nearby' ? <>
-        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: radius.pill, borderWidth: 2, borderColor: colors.line, paddingHorizontal: 16, minHeight: 56, gap: 10 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.glass, borderRadius: radius.pill, borderWidth: 2, borderColor: colors.line, paddingHorizontal: 16, minHeight: 56, gap: 10 }}>
           <Ionicons name="search" size={24} color={colors.primary} />
           <TextInput accessibilityLabel="Search people, skills or interests" value={q} onChangeText={setQ} placeholder="Search people or interests…" placeholderTextColor="#7A8794" style={{ flex: 1, fontSize: 18 * scale, color: colors.text, minHeight: 52 }} />
         </View>

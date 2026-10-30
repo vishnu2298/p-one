@@ -84,7 +84,7 @@ export function PhoneSignIn() {
             <Txt color={colors.sub} style={{ marginBottom: 16 }}>We sent a 6-digit code to {full}.</Txt>
             <TextInput accessibilityLabel="6-digit code" value={code} onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))} keyboardType="number-pad" maxLength={6} autoFocus autoComplete="sms-otp" textContentType="oneTimeCode"
               onSubmitEditing={verify} placeholder="······" placeholderTextColor="#B8C2CC"
-              style={{ minHeight: 72, borderWidth: 2, borderColor: error ? colors.danger : colors.primary, borderRadius: radius.md, textAlign: 'center', fontSize: 34 * scale, letterSpacing: 10, fontWeight: '700', color: colors.text, backgroundColor: '#fff', marginBottom: 12 }} />
+              style={{ minHeight: 72, borderWidth: 2, borderColor: error ? colors.danger : colors.primary, borderRadius: radius.md, textAlign: 'center', fontSize: 34 * scale, letterSpacing: 10, fontWeight: '700', color: colors.text, backgroundColor: colors.glass, marginBottom: 12 }} />
             {error ? <Txt color={colors.danger} bold style={{ marginBottom: 12 }}>{error}</Txt> : null}
             <Button title="Verify and continue" icon="checkmark-circle" onPress={verify} loading={busy} />
             <Button title={wait > 0 ? `Send a new code in ${wait}s` : 'Send a new code'} variant="ghost" disabled={wait > 0 || busy} onPress={send} />

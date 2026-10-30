@@ -9,14 +9,14 @@ function getAdmin() {
   if (initTried) return adminApp;
   initTried = true;
   if (!config.firebaseProjectId && !config.firebaseServiceAccountJson && !process.env.GOOGLE_APPLICATION_CREDENTIALS) return null;
-  const admin = require('firebase-admin');
+  const { initializeApp, cert, applicationDefault } = require('firebase-admin/app');
   if (config.firebaseServiceAccountJson) {
     const sa = JSON.parse(config.firebaseServiceAccountJson);
-    adminApp = admin.initializeApp({ credential: admin.credential.cert(sa), projectId: sa.project_id });
+    adminApp = initializeApp({ credential: cert(sa), projectId: sa.project_id });
   } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    adminApp = admin.initializeApp({ credential: admin.credential.applicationDefault(), projectId: config.firebaseProjectId || undefined });
+    adminApp = initializeApp({ credential: applicationDefault(), projectId: config.firebaseProjectId || undefined });
   } else {
-    adminApp = admin.initializeApp({ projectId: config.firebaseProjectId }); // enough to verify ID tokens
+    adminApp = initializeApp({ projectId: config.firebaseProjectId }); // enough to verify ID tokens
   }
   return adminApp;
 }
@@ -52,7 +52,7 @@ async function verifyIdToken(idToken) {
   if (!app) throw new HttpError(503, 'Phone and Google sign-in are not set up on this server yet');
   let d;
   try {
-    d = await require('firebase-admin').auth(app).verifyIdToken(idToken);
+    d = await require('firebase-admin/auth').getAuth(app).verifyIdToken(idToken);
   } catch {
     throw new HttpError(401, 'Your sign-in expired. Please try again.');
   }
@@ -68,7 +68,7 @@ function createPush() {
     async send(tokens, { title, body, data = {} }) {
       const app = getAdmin();
       if (!app || !tokens.length) return [];
-      const res = await require('firebase-admin').messaging(app).sendEachForMulticast({
+      const res = await require('firebase-admin/messaging').getMessaging(app).sendEachForMulticast({
         tokens,
         notification: { title, body },
         data: Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)])),

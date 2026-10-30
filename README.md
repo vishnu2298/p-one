@@ -77,6 +77,10 @@ Revenue comes only from businesses and partners, in three streams, all recorded 
 Operators read totals with `GET /admin/revenue` (header `x-postback-key: $AFFILIATE_POSTBACK_SECRET`). Brands see their own spend and fees in the app (Profile → Brand hub). Invoicing and payment collection are not built; amounts are tracked so you can bill them.
 Sponsored and affiliate items are always labelled ("Sponsored", "Ad") with a commission disclosure.
 
+## Local secrets
+
+`backend/.env` and `backend/secrets/` are git-ignored; `npm start` loads `backend/.env` automatically (`--env-file-if-exists`). Copy `backend/.env.example` to `backend/.env` and fill it in. Put the Firebase service-account JSON at `backend/secrets/firebase-service-account.json` and point `GOOGLE_APPLICATION_CREDENTIALS` at it. Never commit these files.
+
 ## Setup: Firebase (phone OTP, Google, push)
 
 Without Firebase the app runs in **demo mode** when the API has `FIREBASE_DEV_MODE=1` (phone code is always `123456`, a stand-in replaces the Google picker). Real setup:

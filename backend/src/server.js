@@ -5,6 +5,7 @@ const { createApp } = require('./app');
 const db = open();
 if (db.prepare('SELECT COUNT(*) n FROM users').get().n === 0 && process.env.AUTO_SEED !== '0') {
   require('./seed').seed(db);
+  require('./seed_modules').seedModules(db);
   console.log('Seeded demo data');
 }
 const app = createApp(db);

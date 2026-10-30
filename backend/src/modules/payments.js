@@ -27,6 +27,7 @@ function createPayments(db, { clock = Date.now, config }) {
     provider,
     /** Called when an intent becomes paid (inside the webhook transaction). */
     onPaid(purpose, fn) { hooks.set(purpose, fn); },
+    hooksFor(purpose) { return hooks.get(purpose); },
 
     async createIntent({ purpose, refId, userId, amountPaise }) {
       if (!(amountPaise > 0)) throw new HttpError(400, 'Nothing to pay');

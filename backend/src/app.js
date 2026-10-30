@@ -29,7 +29,7 @@ function createApp(db = open(), deps = {}) {
     keyGenerator: (req) => (req.user ? `u${req.user.id}` : req.ip),
     message: { error: 'You are doing that a lot. Please wait a moment and try again.' },
   }));
-  const limits = { create: per(20, 60 * 60 * 1000), chat: per(60, 60 * 1000) };
+  const limits = { create: per(20, 60 * 60 * 1000), chat: per(60, 60 * 1000), bid: per(40, 60 * 1000), register: per(20, 60 * 1000) };
   const clock = deps.clock || Date.now;
   const jobs = createJobs(db, { clock });
   const payments = createPayments(db, { clock, config });

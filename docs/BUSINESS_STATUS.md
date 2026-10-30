@@ -15,6 +15,9 @@ Verified by `cd backend && npm test` (68 tests) and by driving the real app in a
 - **Scenarios A–F** (auction purchase, auction default, retail shop, marketplace→POS, clinic, multi-employee) are automated tests.
 - **App screens (real APIs, with loading / empty / error / offline states)**: business hub and dashboard, products, stock, POS, sales and invoice, customers, purchases, reports, expenses, team, online-shop settings and orders, appointments, auctions (list, detail, registration payment, live bidding room, checkout, delivery, dispute, create, manage), local shops (browse, cart, checkout, booking), my shop orders. A "Create" menu on the centre tab offers sell, auction or business.
 
+- **Dynamic modules**: categories map to module sets and custom record types; owners can describe their business to get suggestions (Claude-designed when `ANTHROPIC_API_KEY` is set, templates otherwise), build record types by hand, switch built-in modules on/off. Records are validated server-side, tenant-isolated and role-gated (6 tests).
+- **Business web app** (`business-web/`): login, onboarding, dashboard, billing with offline queue, sales and invoices, products, stock, purchases, customers, reports with date range and print, expenses, team, online shop, appointments, generic record pages and the Modules designer. Checked in a real browser at desktop and phone width.
+
 ## Needs credentials, approval or legal review (cannot be done from here)
 | Item | Why |
 |---|---|
@@ -31,4 +34,6 @@ Verified by `cd backend && npm test` (68 tests) and by driving the real app in a
 - Offline queue covers POS bills only (not stock adjustments or expenses), and there is no conflict-resolution screen.
 - No admin web UI: operators use the `/admin/*` routes.
 - Auctions poll every 1.5 s in the app (SSE is available on the API for web clients).
-- Reports have no date picker in the app (default: this month / today).
+- The mobile app's reports have no date picker (the web app does). The mobile app does not yet render custom record types; the web app does.
+- Custom record types have no relations between them (a booking stores the item name, not a link), no formulas or automations, and no per-type permissions.
+- The Connectly (buy/sell) web build keeps the phone-width frame on desktop.

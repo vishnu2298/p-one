@@ -42,7 +42,7 @@ function createApp(db = open(), deps = {}) {
     // The bundled web app shows product photos from other https hosts and talks to Firebase when configured.
     contentSecurityPolicy: { directives: { ...helmet.contentSecurityPolicy.getDefaultDirectives(), 'img-src': ["'self'", 'data:', 'blob:', 'https:'], 'connect-src': ["'self'", 'https:'] } },
   }));
-  app.use(cors());
+  app.use(cors(process.env.CORS_ORIGINS ? { origin: process.env.CORS_ORIGINS.split(',').map((x) => x.trim()) } : undefined)); // set CORS_ORIGINS when the web apps live on other domains
   app.use(express.json({ limit: '9mb', verify: (req, _res, buf) => { req.rawBody = buf; } })); // raw body is needed to verify payment-webhook signatures
   if (process.env.NODE_ENV !== 'test') {
     app.use('/auth', rateLimit({ windowMs: 15 * 60 * 1000, limit: 60, standardHeaders: true, legacyHeaders: false }));
@@ -56,6 +56,12 @@ function createApp(db = open(), deps = {}) {
   }
 
   mountModules(app, ctx);
+
+  // The Business web app (desktop back-office) lives at /business. It uses hash routing, so plain static serving is enough.
+  const bizDir = process.env.BIZ_WEB_DIR || path.join(__dirname, '..', 'business-web');
+  if (fs.existsSync(path.join(bizDir, 'index.html'))) {
+    app.use('/business', express.static(bizDir, { maxAge: '1h' }));
+  }
 
   // Serve the prebuilt web app (backend/web) so the whole product runs from one process: `npm run demo`.
   const webDir = process.env.WEB_DIR || path.join(__dirname, '..', 'web');

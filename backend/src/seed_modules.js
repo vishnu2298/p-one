@@ -86,6 +86,29 @@ function seedModules(db, now = Date.now()) {
     for (const wd of [1, 2, 3, 4, 5, 6]) db.prepare('INSERT INTO biz_staff_availability (business_id, staff_member_id, weekday, start_min, end_min) VALUES (?,?,?,?,?)').run(clinic, doc, wd, 10 * 60, 13 * 60);
   }
 
+  /* ---------------- Iron Works Gym: a business whose modules are generated (members, enquiries), not hand-built ---------------- */
+  {
+    const dyn = require('./modules/dynamic');
+    const gym = Number(db.prepare("INSERT INTO businesses (owner_user_id, name, category, description, address, city, lat, lng, phone, public_slug) VALUES (?,?,?,?,?,?,?,?,?,?)")
+      .run(demo, 'Iron Works Gym', 'gym', 'Strength and cardio. Morning and evening batches.', '3, Cenotaph Road', 'Chennai', lat, lng, '+919876500009', 'iron-works-gym').lastInsertRowid);
+    db.prepare("INSERT INTO business_members (business_id, user_id, role) VALUES (?,?, 'owner')").run(gym, demo);
+    db.prepare('INSERT INTO business_branches (business_id, name, is_default) VALUES (?,?,1)').run(gym, 'Main');
+    acc.seedChart(db, gym);
+    dyn.applyTemplate(db, gym, 'gym');
+    const ent = (k) => db.prepare('SELECT * FROM biz_entities WHERE business_id = ? AND key = ?').get(gym, k);
+    const put = (k, data) => {
+      const e = ent(k), def = JSON.parse(e.def), d = dyn.cleanRecord(def, data);
+      const text = def.fields.filter((f) => ['text', 'longtext', 'phone', 'email', 'select'].includes(f.type)).map((f) => d[f.key] || '').join(' ').toLowerCase();
+      db.prepare('INSERT INTO biz_records (business_id, entity_id, data, status, search, created_by) VALUES (?,?,?,?,?,?)').run(gym, e.id, JSON.stringify(d), d[def.statusField] || '', text, demo);
+    };
+    const ymd = (days) => new Date(now + days * 86400000).toISOString().slice(0, 10);
+    [['Karthik S', '9876500101', 'Yearly', -120, 245, 600000, 'Active'], ['Divya R', '9876500102', 'Quarterly', -60, 30, 180000, 'Active'], ['Imran K', '9876500103', 'Monthly', -40, -10, 60000, 'Expired'],
+      ['Sangeetha M', '9876500104', 'Half-yearly', -30, 150, 330000, 'Active'], ['Vijay P', '9876500105', 'Monthly', -20, 10, 60000, 'Active'], ['Anitha D', '9876500106', 'Monthly', -90, -45, 60000, 'Paused']]
+      .forEach(([name, phone, plan, j, e, fee, status]) => put('member', { name, phone, plan, joined: ymd(j), expires: ymd(e), fee, status }));
+    [['Rahul V', '9876500201', 'Personal training', 'New'], ['Meera J', '9876500202', 'Weight loss plan', 'Contacted'], ['Suresh B', '9876500203', 'Yearly plan', 'Won']]
+      .forEach(([name, phone, interest, status]) => put('lead', { name, phone, interest, status, followup: ymd(2) }));
+  }
+
   /* ---------------- Auctions: one live (demo is registered), one with registration open ---------------- */
   const auctions = require('./seed_auctions');
   auctions.seed(db, { now, rohit, sneha, arun, divya, demo });

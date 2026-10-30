@@ -5,16 +5,16 @@ const ALL = [
   'business.manage', 'team.manage', 'products.read', 'products.write', 'inventory.read', 'inventory.write',
   'purchases.read', 'purchases.write', 'sales.read', 'sales.write', 'sales.refund', 'customers.read', 'customers.write',
   'suppliers.read', 'suppliers.write', 'expenses.write', 'accounting.read', 'accounting.write', 'reports.read',
-  'storefront.manage', 'services.manage', 'appointments.manage', 'clinical.read', 'clinical.write', 'dashboard.read',
+  'storefront.manage', 'services.manage', 'appointments.manage', 'clinical.read', 'clinical.write', 'dashboard.read', 'records.read', 'records.write', 'modules.manage',
 ];
 const ROLES = {
   owner: ALL,
-  manager: ALL.filter((p) => !['business.manage', 'team.manage', 'accounting.write', 'clinical.read', 'clinical.write'].includes(p)),
-  cashier: ['products.read', 'sales.read', 'sales.write', 'customers.read', 'customers.write', 'inventory.read'],
-  inventory: ['products.read', 'products.write', 'inventory.read', 'inventory.write', 'purchases.read', 'purchases.write', 'suppliers.read', 'suppliers.write', 'dashboard.read'],
-  accountant: ['accounting.read', 'accounting.write', 'reports.read', 'expenses.write', 'sales.read', 'purchases.read', 'customers.read', 'suppliers.read', 'products.read', 'inventory.read', 'dashboard.read'],
-  doctor: ['appointments.manage', 'clinical.read', 'clinical.write', 'customers.read', 'services.manage', 'products.read'],
-  receptionist: ['appointments.manage', 'customers.read', 'customers.write', 'sales.read', 'sales.write', 'products.read'],
+  manager: ALL.filter((p) => !['business.manage', 'team.manage', 'accounting.write', 'clinical.read', 'clinical.write', 'modules.manage'].includes(p)),
+  cashier: ['records.read', 'records.write', 'products.read', 'sales.read', 'sales.write', 'customers.read', 'customers.write', 'inventory.read'],
+  inventory: ['records.read', 'products.read', 'products.write', 'inventory.read', 'inventory.write', 'purchases.read', 'purchases.write', 'suppliers.read', 'suppliers.write', 'dashboard.read'],
+  accountant: ['records.read', 'accounting.read', 'accounting.write', 'reports.read', 'expenses.write', 'sales.read', 'purchases.read', 'customers.read', 'suppliers.read', 'products.read', 'inventory.read', 'dashboard.read'],
+  doctor: ['records.read', 'appointments.manage', 'clinical.read', 'clinical.write', 'customers.read', 'services.manage', 'products.read'],
+  receptionist: ['records.read', 'records.write', 'appointments.manage', 'customers.read', 'customers.write', 'sales.read', 'sales.write', 'products.read'],
 };
 
 /** Resolves the signed-in user's membership for :businessId and enforces a permission. */

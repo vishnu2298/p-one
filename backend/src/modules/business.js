@@ -11,6 +11,7 @@ const CATEGORIES = [
   ['retail', 'Retail shop'], ['grocery', 'Grocery and supermarket'], ['electronics', 'Electronics'], ['fashion', 'Fashion and apparel'],
   ['pharmacy', 'Pharmacy'], ['clinic', 'Clinic'], ['hospital', 'Hospital'], ['restaurant', 'Restaurant and cafe'], ['salon', 'Salon and spa'],
   ['wholesaler', 'Wholesaler'], ['distributor', 'Distributor'], ['service', 'Service provider'],
+  ['gym', 'Gym and fitness'], ['education', 'School and coaching'], ['repair', 'Repair and workshop'], ['rental', 'Rental business'], ['contractor', 'Contractor and projects'], ['other', 'Something else'],
 ];
 const INVITABLE = ['manager', 'cashier', 'inventory', 'accountant', 'doctor', 'receptionist'];
 const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
@@ -83,6 +84,7 @@ function routes(ctx) {
       db.prepare('INSERT INTO business_members (business_id, user_id, role) VALUES (?,?,?)').run(bid, req.user.id, 'owner');
       db.prepare('INSERT INTO business_branches (business_id, name, address, is_default) VALUES (?,?,?,1)').run(bid, 'Main branch', text(b.address, { max: 200 }));
       acc.seedChart(db, bid);
+      require('./dynamic').applyTemplate(db, bid, category);
       audit(db, { actor: req.user.id, business: bid, action: 'business.create', entity: 'business', entityId: bid });
       return bid;
     });

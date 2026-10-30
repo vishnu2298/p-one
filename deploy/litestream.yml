@@ -1,0 +1,13 @@
+# Continuous SQLite backup to Cloudflare R2 (S3-compatible). Run the API under litestream:
+#   litestream replicate -config /etc/litestream.yml -exec "node --no-warnings src/server.js"
+# Restore on a fresh machine before starting:  litestream restore -if-db-not-exists -if-replica-exists -config /etc/litestream.yml /data/connectly.db
+dbs:
+  - path: /data/connectly.db
+    replicas:
+      - type: s3
+        bucket: connectly-backups
+        path: db
+        endpoint: https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
+        region: auto
+        access-key-id: ${R2_ACCESS_KEY_ID}
+        secret-access-key: ${R2_SECRET_ACCESS_KEY}

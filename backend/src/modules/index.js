@@ -38,7 +38,7 @@ function mountModules(app, ctx) {
   api.get('/admin/jobs', adminOnly, (_req, res) => res.json({ stats: ctx.jobs.stats(), failed: ctx.jobs.failed() }));
 
   const mods = [];
-  if (f.has('business')) mods.push('business', 'accounting', 'inventory', 'purchasing', 'sales');
+  if (f.has('business')) mods.push('business', 'accounting', 'inventory', 'purchasing', 'sales', 'dynamic');
   if (f.has('storefront')) mods.push('storefront');
   if (f.has('services')) mods.push('services');
   if (f.has('auctions')) mods.push('auctions');

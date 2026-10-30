@@ -40,6 +40,7 @@ Demo data now includes **Lakshmi Provision Stores** (owner: `demo@connectly.app`
 - Profile > **My business**: dashboard, billing (POS), products, stock, purchases, customers, reports, team, online shop, appointments. Sign in as `arun@` to see the cashier's reduced menu.
 - Home > **Auctions**: open the live Canon auction, register for the teak table (test payment, no real money), place bids.
 - Home > **Local shops**: order from Lakshmi (pay now uses the test provider) and watch it appear under My business > Online shop.
+**Business web app:** open `http://localhost:4000/business/` and sign in as `demo@connectly.app` / `demo1234`. Use the business switcher (top left) to move between **Lakshmi Provision Stores** (a shop) and **Iron Works Gym** (members and enquiries were generated, not hand-built). Under *Modules*, type "We rent out cameras and track every booking" and press *Suggest modules*. For development: `cd business-web && npm install && npm run dev` (port 5174, proxies to :4000); `npm run build` writes to `backend/business-web`.
 API reference: `docs/API.md`. What is done and what needs outside parties: `docs/BUSINESS_STATUS.md`.
 
 ## Ten-minute test tour

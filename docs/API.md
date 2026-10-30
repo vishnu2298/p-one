@@ -20,6 +20,14 @@ Admin/operator routes use the header `x-postback-key: $AFFILIATE_POSTBACK_SECRET
 
 Permission matrix: `backend/src/modules/perms.js`. `clinical.*` is owner + doctor only.
 
+## Dynamic modules (the workspace builds itself)
+Every business gets modules and custom record types from its category at creation (`gym` → Members + Enquiries; `repair` → Job cards; `rental` → Rental items + Bookings; `restaurant` → Tables + Reservations …). Older businesses get theirs lazily on first read.  
+`GET /businesses/:id/modules` — built-in modules (`enabled`, `allowed` for this role) plus custom record types with their field definitions; this is what the sidebar renders  
+`PUT /businesses/:id/modules/:key` `{enabled}` — switch a built-in module on/off (team stays on)  
+`POST /businesses/:id/modules/suggest` `{description}` — proposes record types from a plain-language description. With `ANTHROPIC_API_KEY` set, Claude designs them (model `AI_MODULE_MODEL`, default `claude-haiku-5-5`); otherwise keyword templates. Output is untrusted and always normalised by `cleanEntity`. Creates nothing  
+`POST /businesses/:id/entities` (one definition, or `{entities:[…]}`), `PATCH/DELETE …/entities/:key` — define, change, archive record types (≤20 per business, ≤30 fields). Field types: text, longtext, number, money (paise), date, select, checkbox, phone, email. A select named `status` becomes the workflow field  
+`GET/POST …/entities/:key/records`, `GET/PATCH/DELETE …/records/:id`, `GET …/entities/:key/summary` — validated CRUD, search (`q`), status filter, counts and money totals. Permissions `records.read` / `records.write` (structure changes need `modules.manage`: owner only)
+
 ## Catalogue, stock, purchasing
 `POST/GET /businesses/:id/products`, `PATCH …/products/:pid` (price, GST bps, HSN, batches, serials, reorder level, `published` for the storefront)  
 `GET …/inventory`, `…/inventory/low-stock`, `…/inventory/expiring`, `…/inventory/valuation`, `…/inventory/movements`  

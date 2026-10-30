@@ -667,6 +667,37 @@ function migrateModules(db) {
     resolution TEXT DEFAULT '',
     created_at INTEGER
   );
+  CREATE TABLE IF NOT EXISTS biz_modules (
+    business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    key TEXT NOT NULL,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    PRIMARY KEY (business_id, key)
+  );
+  CREATE TABLE IF NOT EXISTS biz_entities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    key TEXT NOT NULL,
+    label TEXT NOT NULL,
+    plural TEXT NOT NULL,
+    icon TEXT DEFAULT 'albums',
+    def TEXT NOT NULL,
+    active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (business_id, key)
+  );
+  CREATE TABLE IF NOT EXISTS biz_records (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    business_id INTEGER NOT NULL,
+    entity_id INTEGER NOT NULL REFERENCES biz_entities(id) ON DELETE CASCADE,
+    data TEXT NOT NULL,
+    status TEXT DEFAULT '',
+    search TEXT DEFAULT '',
+    created_by INTEGER,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TEXT
+  );
+  CREATE INDEX IF NOT EXISTS idx_records_entity ON biz_records (entity_id, deleted_at, id);
   `);
 }
 

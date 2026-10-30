@@ -10,6 +10,15 @@ labelled icons, plain language, and a built-in text-size setting (Normal / Large
 | Primary API | Node.js, Express, SQLite (`node:sqlite`), JWT auth | [`backend/`](backend) |
 | Supporting service | Python, FastAPI (scam moderation and price guidance) | [`services/insights/`](services/insights) |
 
+## Two apps, one backend
+
+| App | For | Where |
+|---|---|---|
+| **Connectly** (buy, sell, connect, auctions, local shops) | everyone | `mobile/` (Android, iOS, and the web build served at `/`) |
+| **Connectly Business** | shop owners, clinics, gyms, workshops and their staff | `business-web/` (desktop-first web app, served at `/business/`) and the same screens inside the mobile app |
+
+The business app is **generated per business**: pick a category (or describe the business) and it switches on the right modules and creates custom record types (members, job cards, bookings, projects…) that are rendered from data, not code. Details in `docs/API.md` (Dynamic modules). Deploy on Cloudflare: `docs/CLOUDFLARE.md`.
+
 ## Features
 
 - **Accounts**: register, log in, change password, delete account (app-store requirement), profile with photo, bio, interests, city.

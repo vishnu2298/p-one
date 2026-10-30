@@ -27,6 +27,9 @@ labelled icons, plain language, and a built-in text-size setting (Normal / Large
 - **Brand partners**: sponsored placements and a brand dashboard. See *Business model*.
 - **Made for India**: UPI "Pay with UPI" deep link, bargaining (make an offer), Call/WhatsApp after a deal is accepted, ₹ lakh/crore formatting, 32 cities with a searchable picker and "Use my location", WhatsApp share pages, community Groups, photos in chat. See [docs/INDIA_PLAN.md](docs/INDIA_PLAN.md).
 - **Compliance**: DPDP consent and data export, Terms/Privacy/Grievance Officer pages, operator takedown tools, prohibited-item filter, GST on brand invoices.
+- **Business management** (one account, several workspaces with roles): POS billing with GST invoices, offline bill queue, stock ledger with batches and expiry, purchasing, customer khata, double-entry books and reports, team permissions, appointments with encrypted clinical notes. See `docs/API.md`.
+- **Online shop**: businesses publish products; buyers order (pickup or delivery, pay now or at the shop) and book appointments. Orders reserve stock and become invoices through verified payment webhooks.
+- **Scheduled auctions**: registration fee plus refundable deposit, authoritative live bidding with anti-sniping, settlement, default handling and a separate conserving ledger. See `docs/BUSINESS_STATUS.md` for what still needs payment-provider and legal sign-off.
 - **Premium minimal glass design**: aurora backdrop, translucent glass cards, blurred headers, a floating glass tab bar, gradient actions. English only for now; Hindi and Tamil text is kept in `mobile/src/locales` and can be switched on later.
 - **Quick onboarding**: one welcome screen (agree, phone or Google, done), then name and city.
 - **Smooth feel**: skeleton loaders, gentle fade-ins, friendly toasts instead of pop-ups, warm colours and plain wording.

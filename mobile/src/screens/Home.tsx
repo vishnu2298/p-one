@@ -73,6 +73,11 @@ export function Home() {
         <Quick icon="pricetag-outline" label="Sell" tint={colors.sell} onPress={() => nav.navigate('SellItem')} />
         <Quick icon="people-outline" label="Connect" tint={colors.primary} onPress={() => nav.navigate('Connect')} />
       </FadeIn>
+      <FadeIn index={2} style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
+        <Quick icon="hammer-outline" label="Auctions" tint={colors.accent} onPress={() => nav.navigate('Auctions')} />
+        <Quick icon="storefront-outline" label="Local shops" tint={colors.buy} onPress={() => nav.navigate('Stores')} />
+        <Quick icon="briefcase-outline" label="My business" tint={colors.sell} onPress={() => nav.navigate('BizHub')} />
+      </FadeIn>
 
       <View style={{ marginTop: space.lg }}><Hero slides={slides} /></View>
 

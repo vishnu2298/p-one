@@ -31,6 +31,14 @@ import { Notifications, routeFor } from './screens/Notifications';
 import { BrandHub } from './screens/BrandHub';
 import { Legal } from './screens/Legal';
 import { GroupScreen } from './screens/Groups';
+import { CreateMenu } from './screens/CreateMenu';
+import { Auctions, AuctionDetail, AuctionCreate, MyAuctions } from './screens/Auctions';
+import { Stores, StoreDetail, MyStoreOrders } from './screens/Stores';
+import { BizHub, BizCreate } from './screens/biz/Hub';
+import { BizProducts, BizProductEdit, BizStock } from './screens/biz/Catalog';
+import { BizPos, BizSales, BizInvoice } from './screens/biz/Pos';
+import { BizCustomers, BizPurchases, BizReports, BizExpenses } from './screens/biz/Books';
+import { BizTeam, BizStore, BizAppointments } from './screens/biz/Team';
 import { listenForNotificationTaps } from './push';
 import { AnimatedSplash, Pop, haptic } from './motion';
 import * as Linking from 'expo-linking';
@@ -88,9 +96,9 @@ function TabBar({ state, navigation }: any) {
       {items.map((r: any) => {
         if (r.name === 'Sell') {
           return (
-            <Pressable key="sell" accessibilityRole="button" accessibilityLabel="Sell an item" onPress={() => { haptic.tap(); root.navigate('SellItem'); }} style={{ flex: 1, alignItems: 'center', marginTop: -26 }}>
+            <Pressable key="sell" accessibilityRole="button" accessibilityLabel="Create" onPress={() => { haptic.tap(); root.navigate('CreateMenu'); }} style={{ flex: 1, alignItems: 'center', marginTop: -26 }}>
               <SellPulse />
-              <Txt variant="tiny" bold color={colors.primary}>Sell</Txt>
+              <Txt variant="tiny" bold color={colors.primary}>Create</Txt>
             </Pressable>
           );
         }
@@ -170,6 +178,29 @@ export function RootNavigator() {
         ) : (
           <>
             <Stack.Screen name="Main" component={MainTabs} />
+            <Stack.Screen name="CreateMenu" component={CreateMenu} options={{ animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="Auctions" component={Auctions} />
+            <Stack.Screen name="AuctionDetail" component={AuctionDetail} />
+            <Stack.Screen name="AuctionCreate" component={AuctionCreate} />
+            <Stack.Screen name="MyAuctions" component={MyAuctions} />
+            <Stack.Screen name="Stores" component={Stores} />
+            <Stack.Screen name="StoreDetail" component={StoreDetail} />
+            <Stack.Screen name="MyStoreOrders" component={MyStoreOrders} />
+            <Stack.Screen name="BizHub" component={BizHub} />
+            <Stack.Screen name="BizCreate" component={BizCreate} />
+            <Stack.Screen name="BizProducts" component={BizProducts} />
+            <Stack.Screen name="BizProductEdit" component={BizProductEdit} />
+            <Stack.Screen name="BizStock" component={BizStock} />
+            <Stack.Screen name="BizPos" component={BizPos} />
+            <Stack.Screen name="BizSales" component={BizSales} />
+            <Stack.Screen name="BizInvoice" component={BizInvoice} />
+            <Stack.Screen name="BizCustomers" component={BizCustomers} />
+            <Stack.Screen name="BizPurchases" component={BizPurchases} />
+            <Stack.Screen name="BizReports" component={BizReports} />
+            <Stack.Screen name="BizExpenses" component={BizExpenses} />
+            <Stack.Screen name="BizTeam" component={BizTeam} />
+            <Stack.Screen name="BizStore" component={BizStore} />
+            <Stack.Screen name="BizAppointments" component={BizAppointments} />
             <Stack.Screen name="Deals" component={Deals} />
             <Stack.Screen name="Invite" component={Invite} />
             <Stack.Screen name="Notifications" component={Notifications} />

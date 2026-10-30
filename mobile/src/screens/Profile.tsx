@@ -42,6 +42,9 @@ export function Profile() {
 
       <Card style={{ marginTop: 20, paddingVertical: 6 }}>
         <Row icon="gift" label="Invite friends and family" value="Bring your people to Connectly" onPress={() => nav.navigate('Invite')} />
+        <Row icon="briefcase" label="My business" value="Billing, stock, books, online shop" onPress={() => nav.navigate('BizHub')} />
+        <Row icon="hammer" label="Auctions" value="Bid, or auction something yourself" onPress={() => nav.navigate('Auctions')} />
+        <Row icon="bag" label="Shop orders and appointments" onPress={() => nav.navigate('MyStoreOrders')} />
         <Row icon="receipt" label="My orders" value="Things you bought and sold" onPress={() => nav.navigate('Orders')} />
         <Row icon="heart" label="Saved items" onPress={() => nav.navigate('Favorites')} />
         <Row icon="people" label="My connections" onPress={() => nav.navigate('Connect')} />

@@ -45,7 +45,7 @@ function seedModules(db, now = Date.now()) {
     const id = Number(db.prepare('INSERT INTO biz_products (business_id, sku, barcode, name, category, unit, purchase_price_paise, selling_price_paise, tax_bps, reorder_level, has_batches, published) VALUES (?,?,?,?,?,?,?,?,?,?,?,1)')
       .run(bizId, sku, `8901${String(1000 + Object.keys(pids).length)}`, name, 'Groceries', 'pcs', R(cost), R(sell), bps, reorder, batch).lastInsertRowid);
     pids[sku] = id;
-    inv.adjust(db, { businessId: bizId, branchId: branch, productId: id, qtyDelta: qty, reason: 'opening', unitCostPaise: R(cost), batchNo: batch ? 'B-001' : undefined, expiry: batch ? new Date(now + expiryOf[sku] * 86400000).toISOString().slice(0, 10) : undefined, by: demo, key: `seed-open-${id}` });
+    inv.adjust(db, { businessId: bizId, branchId: branch, productId: id, qtyDelta: qty >= 10 ? qty * 6 : qty, reason: 'opening', unitCostPaise: R(cost), batchNo: batch ? 'B-001' : undefined, expiry: batch ? new Date(now + expiryOf[sku] * 86400000).toISOString().slice(0, 10) : undefined, by: demo, key: `seed-open-${id}` });
   }
   void supplier;
 
@@ -59,8 +59,8 @@ function seedModules(db, now = Date.now()) {
       n++;
       const a = skus[(n * 3) % skus.length], b = skus[(n * 7 + 1) % skus.length];
       const total = (sku, q) => q * (catalog.find((c) => c[1] === sku)[2] * 100);
-      const items = [{ productId: pids[a], qty: 1 + (n % 3) }, ...(n % 2 ? [{ productId: pids[b], qty: 1 }] : [])];
-      const sum = total(a, 1 + (n % 3)) + (n % 2 ? total(b, 1) : 0);
+      const items = [{ productId: pids[a], qty: 3 + 2 * (n % 3) }, ...(n % 2 ? [{ productId: pids[b], qty: 2 }] : [])];
+      const sum = total(a, 3 + 2 * (n % 3)) + (n % 2 ? total(b, 2) : 0);
       const credit = n % 9 === 0 && day < 6;
       try {
         const out = sales.createInvoice(db, { businessId: bizId, branchId: branch, items, customerId: credit ? customers[n % 3] : customers[3], payments: credit ? [] : [{ method: ['cash', 'upi', 'cash', 'card'][n % 4], amountPaise: sum }], idempotencyKey: `seed-sale-${n}`, by: demo });
@@ -68,7 +68,7 @@ function seedModules(db, now = Date.now()) {
       } catch { /* a depleted item simply skips that sale */ }
     }
   }
-  for (const [code, amt, note, payee] of [['6000', 18000, 'Shop rent', 'Landlord'], ['6020', 3200, 'Electricity bill', 'TNEB'], ['6010', 9000, 'Part-time helper', 'Staff']]) {
+  for (const [code, amt, note, payee] of [['6000', 1800, 'Shop rent', 'Landlord'], ['6020', 700, 'Electricity bill', 'TNEB'], ['6010', 1000, 'Part-time helper', 'Staff']]) {
     const info = db.prepare('INSERT INTO biz_expenses (business_id, account_code, amount_paise, tax_paise, method, payee, note, date, created_by) VALUES (?,?,?,0,?,?,?,date(\'now\'),?)').run(bizId, code, R(amt), 'bank', payee, note, demo);
     acc.post(db, { businessId: bizId, memo: `Expense: ${note}`, sourceType: 'expense', sourceId: info.lastInsertRowid, sourceKey: `expense:${info.lastInsertRowid}`, by: demo, lines: [{ code, debit: R(amt) }, { code: '1010', credit: R(amt) }] });
   }

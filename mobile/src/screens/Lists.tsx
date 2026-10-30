@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Modal, Pressable, View } from 'react-native';
+import { Linking, Modal, Platform, Pressable, View } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { api, money, timeAgo } from '../api';
 import { useLoad } from '../hooks';
 import { Avatar, Button, Card, Empty, ErrorState, Header, Input, Loading, Pill, Screen, Stars, Txt, confirmDialog, notify, SkeletonCardGrid, SkeletonRows, toast } from '../ui';
 import { colors, space } from '../theme';
+import { Confetti, Segmented, haptic } from '../motion';
 import { Listing, Order } from '../types';
 import { ListingGrid, ListingImage, toggleFavorite } from '../components/ListingCard';
 
@@ -78,15 +80,28 @@ export function Orders() {
   const [stars, setStars] = useState(5);
   const [comment, setComment] = useState('');
   const [busy, setBusy] = useState(false);
+  const [boom, setBoom] = useState(false);
   const orders = res.data?.orders || [];
 
   const act = async (o: Order, action: string, ask?: [string, string]) => {
     if (ask && !(await confirmDialog(ask[0], ask[1], 'Yes'))) return;
-    try { await api(`/orders/${o.id}/${action}`, { method: 'POST' }); void res.reload(true); } catch (e: any) { notify('Could not update order', e.message); }
+    try { await api(`/orders/${o.id}/${action}`, { method: 'POST' }); void res.reload(true); if (action === 'complete') { setBoom(true); haptic.success(); toast('Deal completed. Congratulations!'); } else if (action === 'accept') haptic.success(); } catch (e: any) { notify('Could not update order', e.message); }
   };
   const chat = async (o: Order) => {
     const other = o.role === 'buyer' ? o.seller : o.buyer;
     try { const r = await api<{ conversation: { id: number } }>('/conversations', { method: 'POST', body: { userId: other.id, listingId: o.listing.id } }); nav.navigate('Chat', { id: r.conversation.id }); } catch (e: any) { notify('Error', e.message); }
+  };
+  // UPI deep link opens GPay / PhonePe / Paytm with the seller and amount filled in. Money moves directly, never through Connectly.
+  const payUpi = async (o: Order) => {
+    const p = o.pay!;
+    const url = `upi://pay?pa=${encodeURIComponent(p.upiId)}&pn=${encodeURIComponent(p.payeeName)}&am=${p.amount}&cu=INR&tn=${encodeURIComponent(`Connectly order ${o.id}`)}`;
+    try {
+      if (Platform.OS === 'web') throw new Error('web');
+      await Linking.openURL(url);
+    } catch {
+      await Clipboard.setStringAsync(p.upiId);
+      notify('UPI ID copied', `Open any UPI app and pay ₹${p.amount.toLocaleString('en-IN')} to ${p.upiId}. Pay only after you have checked the item.`);
+    }
   };
   const submitReview = async () => {
     if (!rate) return;
@@ -95,14 +110,8 @@ export function Orders() {
   };
 
   return (
-    <Screen header={<Header title="My orders" />} refresh={{ refreshing: res.refreshing, onRefresh: res.refresh }}>
-      <View style={{ flexDirection: 'row', backgroundColor: colors.primarySoft, borderRadius: 16, padding: 4, marginBottom: 14 }}>
-        {(['buying', 'selling'] as const).map((t) => (
-          <Pressable key={t} accessibilityRole="tab" accessibilityState={{ selected: tab === t }} onPress={() => setTab(t)} style={{ flex: 1, minHeight: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: tab === t ? '#fff' : 'transparent' }}>
-            <Txt bold color={tab === t ? colors.primary : colors.sub}>{t === 'buying' ? 'I am buying' : 'I am selling'}</Txt>
-          </Pressable>
-        ))}
-      </View>
+    <Screen header={<Header title="My orders" />} refresh={{ refreshing: res.refreshing, onRefresh: res.refresh }} overlay={<Confetti run={boom} onDone={() => setBoom(false)} />}>
+      <Segmented options={[{ id: 'buying', label: 'I am buying' }, { id: 'selling', label: 'I am selling' }]} value={tab} onChange={setTab} />
       {res.loading && !res.data ? <SkeletonRows /> : res.error && !res.data ? <ErrorState message={res.error} retry={() => res.reload()} /> :
         !orders.length ? <Empty icon="receipt" title={tab === 'buying' ? 'No purchases yet' : 'No buyer requests yet'} text={tab === 'buying' ? 'Tap "Buy Now" on an item to send a request.' : 'When someone wants your item, it appears here.'} /> :
           <View style={{ gap: 12 }}>
@@ -115,6 +124,7 @@ export function Orders() {
                     <View style={{ flex: 1, gap: 2 }}>
                       <Txt bold numberOfLines={2}>{o.listing.title}</Txt>
                       <Txt variant="h2" color={colors.primary}>{money(o.price)}</Txt>
+                      {o.listPrice > o.price ? <Txt variant="tiny" color={colors.sub}>Offer · asking {money(o.listPrice)}</Txt> : null}
                       <Txt variant="tiny" color={colors.sub}>{timeAgo(o.createdAt)}</Txt>
                     </View>
                   </Pressable>
@@ -123,6 +133,22 @@ export function Orders() {
                     <Avatar name={other.name} size={36} /><Txt variant="small">{o.role === 'buyer' ? 'Seller' : 'Buyer'}: <Txt variant="small" bold>{other.name}</Txt></Txt>
                   </Pressable>
                   {o.note ? <Txt variant="small" color={colors.sub}>“{o.note}”</Txt> : null}
+                  {o.contactPhone ? (
+                    <View style={{ gap: 8 }}>
+                      <Txt variant="small" color={colors.sub}>Phone numbers are shared only after the seller accepts.</Txt>
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <Button compact title="Call" icon="call" variant="light" style={{ flex: 1 }} onPress={() => Linking.openURL(`tel:${o.contactPhone}`).catch(() => notify('Could not start the call'))} />
+                        <Button compact title="WhatsApp" icon="logo-whatsapp" variant="buy" style={{ flex: 1 }} onPress={() => Linking.openURL(`https://wa.me/${String(o.contactPhone).replace(/\D/g, '')}`).catch(() => notify('Could not open WhatsApp'))} />
+                      </View>
+                    </View>
+                  ) : null}
+                  {o.pay ? (
+                    <View style={{ backgroundColor: colors.buySoft, borderRadius: 14, padding: 12, gap: 8 }}>
+                      <Txt variant="small" color={colors.buy} bold>Pay only after you have checked the item. Never pay in advance.</Txt>
+                      <Button title={`Pay with UPI · ${money(o.pay.amount)}`} icon="phone-portrait" variant="buy" onPress={() => payUpi(o)} />
+                      <Button compact title="Copy UPI ID" icon="copy" variant="light" onPress={async () => { await Clipboard.setStringAsync(o.pay!.upiId); toast('UPI ID copied'); }} />
+                    </View>
+                  ) : null}
                   <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
                     {o.status !== 'declined' && o.status !== 'cancelled' ? <Button compact title="Chat" icon="chatbubble" variant="light" style={{ flexGrow: 1 }} onPress={() => chat(o)} /> : null}
                     {o.role === 'seller' && o.status === 'requested' ? <>

@@ -10,6 +10,7 @@ import { CATEGORIES, CITIES, catById } from '../categories';
 import { Listing, Category, UserBrief } from '../types';
 import { ListingGrid, toggleFavorite } from '../components/ListingCard';
 import { useSettings } from '../context';
+import { CityField } from '../components/CityPicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const SORTS = [
@@ -92,11 +93,7 @@ function FilterSheet({ visible, onClose, sort, setSort, city, setCity, price, se
             <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>{SORTS.map((s) => <Chip key={s.id} label={s.label} selected={sort === s.id} onPress={() => setSort(s.id)} />)}</View>
             <Txt bold style={{ marginVertical: 8 }}>Price</Txt>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>{PRICES.map((p, i) => <Chip key={p.label} label={p.label} selected={price === i} onPress={() => setPrice(i)} />)}</View>
-            <Txt bold style={{ marginVertical: 8 }}>City</Txt>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-              <Chip label="Anywhere" selected={!city} onPress={() => setCity(undefined)} />
-              {CITIES.map((c) => <Chip key={c} label={c} selected={city === c} onPress={() => setCity(c)} />)}
-            </View>
+            <CityField label="City" anywhere value={city} onChange={(c) => setCity(c)} />
           </ScrollView>
           <Button title="Show results" onPress={onClose} style={{ marginTop: 12 }} />
         </Pressable>

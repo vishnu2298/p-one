@@ -8,6 +8,8 @@ import { Button, Chip, Header, Input, Loading, Screen, Txt, notify, toast } from
 import { colors, radius, space } from '../theme';
 import { CATEGORIES, CITIES, CONDITIONS } from '../categories';
 import { Listing } from '../types';
+import { CityField } from '../components/CityPicker';
+import { haptic } from '../motion';
 import { useAuth } from '../context';
 
 const MAX_PHOTOS = 5;
@@ -74,8 +76,8 @@ export function SellItem() {
     try {
       const body = { ...f, title: f.title.trim(), price, images };
       const r = editId ? await api<{ listing: Listing }>(`/listings/${editId}`, { method: 'PATCH', body }) : await api<{ listing: Listing }>('/listings', { method: 'POST', body });
-      if (editId) nav.goBack(); else nav.replace('ItemDetails', { id: r.listing.id });
-      toast(editId ? 'Changes saved' : 'Your item is live. People nearby can see it now.');
+      if (editId) nav.goBack(); else nav.replace('ItemDetails', { id: r.listing.id, celebrate: true });
+      toast(editId ? 'Changes saved' : 'Your item is live. People nearby can see it now.'); if (!editId) haptic.success();
     } catch (err: any) { notify('Could not list item', err.message); } finally { setBusy(false); }
   };
 
@@ -120,8 +122,7 @@ export function SellItem() {
         <Input label="Brand (optional)" value={f.brand} onChangeText={set('brand')} placeholder="e.g. Apple" />
         <Input label="Description" value={f.description} onChangeText={set('description')} multiline placeholder="Age, condition, what is included…" maxLength={2000} />
 
-        <Txt bold style={{ marginBottom: 8 }}>Location</Txt>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>{CITIES.map((c) => <Chip key={c} icon="location" label={c} selected={f.city === c} onPress={() => set('city')(c)} />)}</View>
+        <CityField label="Location" value={f.city} onChange={(c) => set('city')(c || f.city)} />
         <Txt variant="small" color={colors.sub}>Only your city is shown, never your exact address.</Txt>
       </Screen>
     </KeyboardAvoidingView>

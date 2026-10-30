@@ -5,6 +5,8 @@ import { api, timeAgo } from '../api';
 import { useLoad } from '../hooks';
 import { Avatar, Button, Card, Empty, ErrorState, Header, Loading, Screen, Txt, notify, SkeletonRows, toast } from '../ui';
 import { colors, space } from '../theme';
+import { Segmented } from '../motion';
+import { translate } from '../i18n';
 import { Conversation } from '../types';
 import { useEffect } from 'react';
 
@@ -26,13 +28,7 @@ export function Messages() {
 
   return (
     <Screen header={<Header title="Messages" back={false} />} refresh={{ refreshing: chats.refreshing, onRefresh: () => { chats.refresh(); void reqs.reload(true); } }}>
-      <View style={{ flexDirection: 'row', backgroundColor: colors.primarySoft, borderRadius: 16, padding: 4, marginBottom: space.lg }}>
-        {(['chats', 'requests'] as const).map((t) => (
-          <Pressable key={t} accessibilityRole="tab" accessibilityState={{ selected: tab === t }} onPress={() => setTab(t)} style={{ flex: 1, minHeight: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: tab === t ? '#fff' : 'transparent' }}>
-            <Txt bold color={tab === t ? colors.primary : colors.sub}>{t === 'chats' ? 'Chats' : `Requests${nReq ? ` (${nReq})` : ''}`}</Txt>
-          </Pressable>
-        ))}
-      </View>
+      <Segmented options={[{ id: 'chats', label: 'Chats' }, { id: 'requests', label: `${translate('Requests')}${nReq ? ` (${nReq})` : ''}` }]} value={tab} onChange={setTab} />
 
       {tab === 'chats' ? (
         chats.loading && !chats.data ? <SkeletonRows /> : chats.error && !chats.data ? <ErrorState message={chats.error} retry={() => chats.reload()} /> :
@@ -47,7 +43,7 @@ export function Messages() {
                       <Txt variant="tiny" color={colors.sub}>{timeAgo(c.updatedAt)}</Txt>
                     </View>
                     <Txt variant="small" color={c.unread ? colors.text : colors.sub} bold={!!c.unread} numberOfLines={1}>
-                      {c.lastMessage ? `${c.lastMessage.mine ? 'You: ' : ''}${c.lastMessage.type === 'location' ? 'Shared a location' : c.lastMessage.body}` : ''}
+                      {c.lastMessage ? `${c.lastMessage.mine ? 'You: ' : ''}${c.lastMessage.type === 'location' ? 'Shared a location' : c.lastMessage.type === 'image' ? 'Sent a photo' : c.lastMessage.body}` : ''}
                     </Txt>
                     {c.listing ? <Txt variant="tiny" color={colors.primary} numberOfLines={1}>About: {c.listing.title}</Txt> : null}
                   </View>

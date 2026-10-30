@@ -1,10 +1,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { api, setToken, setUnauthorizedHandler, storage } from './api';
+import { api, hasToken, setToken, setUnauthorizedHandler, storage } from './api';
 import { Me } from './types';
 import * as Linking from 'expo-linking';
 import { Platform } from 'react-native';
 import { firebaseSignOut } from './firebaseAuth';
 import { registerForPush, unregisterPush } from './push';
+import { Lang, setCurrentLang } from './i18n';
 import { TEXT_SCALE, TextSize } from './theme';
 
 type AuthCtx = {
@@ -14,6 +15,8 @@ type AuthCtx = {
   finishOnboarding: () => void;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (v: { name: string; email: string; password: string; city: string; phone?: string; referralCode?: string }) => Promise<void>;
+  consent: boolean;
+  setConsent: (v: boolean) => void;
   signInWithFirebase: (idToken: string, extra?: { referralCode?: string; city?: string }) => Promise<{ isNew: boolean }>;
   referralCode: string;
   clearReferral: () => void;
@@ -24,8 +27,8 @@ type AuthCtx = {
 const Auth = createContext<AuthCtx>(null as any);
 export const useAuth = () => useContext(Auth);
 
-type SettingsCtx = { textSize: TextSize; scale: number; setTextSize: (t: TextSize) => void };
-const Settings = createContext<SettingsCtx>({ textSize: 'normal', scale: 1, setTextSize: () => {} });
+type SettingsCtx = { textSize: TextSize; scale: number; setTextSize: (t: TextSize) => void; lang: Lang; setLang: (l: Lang) => void; langChosen: boolean };
+const Settings = createContext<SettingsCtx>({ textSize: 'normal', scale: 1, setTextSize: () => {}, lang: 'en', setLang: () => {}, langChosen: true });
 export const useSettings = () => useContext(Settings);
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -34,6 +37,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [seenOnboarding, setSeen] = useState(false);
   const [textSize, setTextSizeState] = useState<TextSize>('large');
   const [referralCode, setReferral] = useState('');
+  const [consent, setConsent] = useState(false);
+  const [lang, setLangState] = useState<Lang>('en');
+  const [langChosen, setLangChosen] = useState(true);
 
   const signOut = useCallback(async () => {
     await unregisterPush(); // needs the token, so do it first
@@ -63,7 +69,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setUnauthorizedHandler(() => { void signOut(); });
     (async () => {
-      const [t, seen, size] = await Promise.all([storage.get('token'), storage.get('seenOnboarding'), storage.get('textSize')]);
+      const [t, seen, size, savedLang] = await Promise.all([storage.get('token'), storage.get('seenOnboarding'), storage.get('textSize'), storage.get('lang')]);
+      if (savedLang === 'en' || savedLang === 'hi' || savedLang === 'ta') { setLangState(savedLang); setCurrentLang(savedLang); } else setLangChosen(false);
       if (seen) setSeen(true);
       if (size === 'normal' || size === 'large' || size === 'xlarge') setTextSizeState(size);
       if (t) {
@@ -84,23 +91,29 @@ export function Providers({ children }: { children: React.ReactNode }) {
     ready, user, seenOnboarding, setUser,
     finishOnboarding: () => { setSeen(true); void storage.set('seenOnboarding', '1'); },
     signIn: async (email, password) => accept(await api('/auth/login', { method: 'POST', body: { email, password } })),
-    signUp: async (v) => { await accept(await api('/auth/register', { method: 'POST', body: { referralCode, ...v } })); setReferral(''); void storage.del('referralCode'); },
+    signUp: async (v) => { await accept(await api('/auth/register', { method: 'POST', body: { consent, referralCode, ...v } })); setReferral(''); void storage.del('referralCode'); },
     signInWithFirebase: async (idToken, extra) => {
-      const r = await api<{ token: string; user: Me; isNew: boolean }>('/auth/firebase', { method: 'POST', body: { idToken, referralCode, ...extra } });
+      const r = await api<{ token: string; user: Me; isNew: boolean }>('/auth/firebase', { method: 'POST', body: { idToken, consent, referralCode, ...extra } });
       await accept(r);
       if (r.isNew) { setReferral(''); void storage.del('referralCode'); }
       return { isNew: r.isNew };
     },
+    consent, setConsent,
     referralCode,
     clearReferral: () => { setReferral(''); void storage.del('referralCode'); },
     signOut,
     refresh: async () => { try { setUser((await api<{ user: Me }>('/me')).user); } catch { /* handled by 401 */ } },
-  }), [ready, user, seenOnboarding, signOut, referralCode]);
+  }), [ready, user, seenOnboarding, signOut, referralCode, consent]);
 
   const settings = useMemo<SettingsCtx>(() => ({
     textSize, scale: TEXT_SCALE[textSize],
     setTextSize: (t) => { setTextSizeState(t); void storage.set('textSize', t); },
-  }), [textSize]);
+    lang, langChosen,
+    setLang: (l) => {
+      setCurrentLang(l); setLangState(l); setLangChosen(true); void storage.set('lang', l);
+      if (hasToken()) void api('/me', { method: 'PATCH', body: { language: l } }).catch(() => {}); // keep the server in sync for signed-in users
+    },
+  }), [textSize, lang, langChosen]);
 
   return <Settings.Provider value={settings}><Auth.Provider value={auth}>{children}</Auth.Provider></Settings.Provider>;
 }

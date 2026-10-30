@@ -10,6 +10,10 @@ import { ScrollView } from 'react-native';
 import { DealCard } from '../components/DealCard';
 import { SponsoredCard, useAds } from '../components/Sponsored';
 import { Product } from '../types';
+import { Hero, HeroSlide, useRotating } from '../motion';
+import { translate } from '../i18n';
+import { useSettings } from '../context';
+import { Animated } from 'react-native';
 import { colors, radius, shadow, space } from '../theme';
 import { CATEGORIES } from '../categories';
 import { Listing } from '../types';
@@ -40,7 +44,15 @@ export function Home() {
   const deals = useLoad(() => api<{ products: Product[] }>('/products?limit=8'), []);
   const ads = useAds('home');
   const hour = new Date().getHours();
-  const hello = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const { lang, scale } = useSettings();
+  const hello = translate(hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening');
+  const EXAMPLES: Record<string, string[]> = { en: ['iPhone', 'sofa set', 'bicycle', 'tuition', 'sarees'], hi: ['iPhone', 'सोफ़ा', 'साइकिल', 'ट्यूशन', 'साड़ी'], ta: ['iPhone', 'சோபா', 'சைக்கிள்', 'டியூஷன்', 'புடவை'] };
+  const hint = useRotating(EXAMPLES[lang] || EXAMPLES.en);
+  const slides: HeroSlide[] = [
+    { id: 'sell', title: translate('Sell what you don\'t'), text: translate('Add photos, set a price and your item is live in a minute.'), icon: 'pricetag', colors: ['#C2410C', '#EA7A3B'], cta: translate('Sell an item'), onPress: () => nav.navigate('SellItem') },
+    { id: 'deals', title: translate("Today's deals"), text: translate('Top offers, updated daily'), icon: 'flash', colors: ['#1747C6', '#4F7BEA'], cta: translate('See all'), onPress: () => nav.navigate('Deals') },
+    { id: 'invite', title: translate('Bring your people'), text: translate('Invite friends and family'), icon: 'gift', colors: ['#12794A', '#37A874'], cta: translate('Invite friends and family'), onPress: () => nav.navigate('Invite') },
+  ];
   const [, force] = useState(0);
   const badge = unread.data?.notifications || 0;
 
@@ -64,8 +76,10 @@ export function Home() {
       <Pressable accessibilityRole="search" accessibilityLabel="Search products, services or people" onPress={() => nav.navigate('Search')}
         style={{ minHeight: 60, borderRadius: radius.pill, backgroundColor: '#fff', borderWidth: 2, borderColor: colors.line, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, gap: 12 }}>
         <Ionicons name="search" size={26} color={colors.primary} />
-        <Txt color={colors.sub}>Search for anything…</Txt>
+        <Animated.Text numberOfLines={1} style={[{ fontSize: 18 * scale, color: colors.sub, flex: 1 }, hint.style as any]}>{translate('Search')} “{hint.text}”</Animated.Text>
       </Pressable>
+
+      <View style={{ marginTop: space.lg }}><Hero slides={slides} /></View>
 
       <View style={{ gap: 12, marginTop: space.lg }}>
         <BigAction icon="cart" title="Buy" hint="Find what you need nearby" color={colors.buy} bg={colors.buySoft} onPress={() => nav.navigate('Listings', {})} />

@@ -4,15 +4,34 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Providers } from './src/context';
 import { RootNavigator } from './src/navigation';
-import { ToastHost } from './src/ui';
+import { ToastHost, Button, Txt } from './src/ui';
+import { OfflineBanner } from './src/motion';
+
+// Last line of defence: a friendly screen instead of a blank crash.
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(e: unknown) { console.error('App crashed:', e); }
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 14, backgroundColor: '#fff' }}>
+        <Txt variant="title" center>Oops, something went wrong</Txt>
+        <Txt center color="#475467">Please try again. Your information is safe.</Txt>
+        <Button title="Try again" onPress={() => this.setState({ failed: false })} style={{ alignSelf: 'stretch' }} />
+      </View>
+    );
+  }
+}
 
 export default function App() {
   const content = (
     <SafeAreaProvider>
       <Providers>
         <StatusBar style="dark" />
-        <RootNavigator />
+        <ErrorBoundary><RootNavigator /></ErrorBoundary>
         <ToastHost />
+        <OfflineBanner />
       </Providers>
     </SafeAreaProvider>
   );

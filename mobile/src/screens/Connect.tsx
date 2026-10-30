@@ -8,12 +8,15 @@ import { Avatar, Button, Card, Chip, Empty, ErrorState, Header, Loading, Pill, S
 import { colors, radius } from '../theme';
 import { Person } from '../types';
 import { useSettings } from '../context';
+import { Segmented } from '../motion';
+import { translate } from '../i18n';
+import { GroupsTab } from './Groups';
 
 /** Connect: people nearby (sorted by distance) and my connections. */
 export function Connect() {
   const nav = useNavigation<any>();
   const { scale } = useSettings();
-  const [tab, setTab] = useState<'nearby' | 'mine'>('nearby');
+  const [tab, setTab] = useState<'nearby' | 'mine' | 'groups'>('nearby');
   const [q, setQ] = useState('');
   const [interest, setInterest] = useState<string | null>(null);
   const dq = useDebounced(q);
@@ -53,13 +56,7 @@ export function Connect() {
 
   return (
     <Screen header={<Header title="Connect" subtitle="Meet people nearby" />} refresh={{ refreshing: people.refreshing, onRefresh: () => { people.refresh(); void mine.reload(true); } }}>
-      <View style={{ flexDirection: 'row', backgroundColor: colors.primarySoft, borderRadius: 16, padding: 4, marginBottom: 14 }}>
-        {([['nearby', 'People nearby'], ['mine', `My connections${mine.data?.connections.length ? ` (${mine.data.connections.length})` : ''}`]] as const).map(([t, label]) => (
-          <Pressable key={t} accessibilityRole="tab" accessibilityState={{ selected: tab === t }} onPress={() => setTab(t)} style={{ flex: 1, minHeight: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: tab === t ? '#fff' : 'transparent' }}>
-            <Txt bold color={tab === t ? colors.primary : colors.sub} center>{label}</Txt>
-          </Pressable>
-        ))}
-      </View>
+      <Segmented options={[{ id: 'nearby', label: 'People' }, { id: 'mine', label: `${translate('Connected')}${mine.data?.connections.length ? ` (${mine.data.connections.length})` : ''}` }, { id: 'groups', label: 'Groups' }]} value={tab} onChange={setTab} />
 
       {tab === 'nearby' ? <>
         <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: radius.pill, borderWidth: 2, borderColor: colors.line, paddingHorizontal: 16, minHeight: 56, gap: 10 }}>
@@ -75,7 +72,7 @@ export function Connect() {
         {people.loading && !people.data ? <SkeletonRows /> : people.error && !people.data ? <ErrorState message={people.error} retry={() => people.reload()} /> :
           !people.data?.people.length ? <Empty icon="people" title="No one found" text="Try a different search, or clear the interest filter." /> :
             <View style={{ gap: 10 }}>{people.data.people.map((p) => <PersonRow key={p.id} p={p} />)}</View>}
-      </> : (
+      </> : tab === 'groups' ? <GroupsTab /> : (
         mine.loading && !mine.data ? <SkeletonRows /> : !mine.data?.connections.length ? <Empty icon="person-add" title="No connections yet" text="Connect with people nearby to chat and build trust." action={{ title: 'Find people nearby', onPress: () => setTab('nearby') }} /> :
           <View style={{ gap: 10 }}>{mine.data.connections.map((c) => <PersonRow key={c.id} p={{ ...c.user, distanceKm: null, connection: { status: 'connected' } }} />)}</View>
       )}

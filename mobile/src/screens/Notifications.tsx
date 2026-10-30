@@ -22,6 +22,7 @@ export function routeFor(data: Record<string, any>, type?: string): [string, any
   if (t === 'connection_request') return ['Main', { screen: 'Messages' }];
   if (t === 'connection_accepted' && data.userId) return ['UserProfile', { id: Number(data.userId) }];
   if (t === 'invite_joined') return ['Invite', {}];
+  if (t === 'moderation') return ['MyListings', {}];
   if (t === 'review' && data.userId) return ['UserProfile', { id: Number(data.userId) }];
   return null;
 }

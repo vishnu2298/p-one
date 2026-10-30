@@ -8,6 +8,10 @@ import { useNavigation } from '@react-navigation/native';
 import { colors, radius, shadow, space, TAP } from './theme';
 import { useSettings } from './context';
 import { imageUrl } from './api';
+import { translate } from './i18n';
+
+/** Translates plain-English UI text into the chosen language (no-op for English or unknown text). */
+const tr = (v: any, lang: any): any => (typeof v === 'string' ? translate(v, lang) : v);
 
 export type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -15,10 +19,10 @@ export type IconName = React.ComponentProps<typeof Ionicons>['name'];
 const SIZES = { hero: 34, title: 28, h2: 22, body: 18, small: 16, tiny: 14 } as const;
 type Variant = keyof typeof SIZES;
 export function Txt({ variant = 'body', color = colors.text, bold, center, style, ...rest }: TextProps & { variant?: Variant; color?: string; bold?: boolean; center?: boolean }) {
-  const { scale } = useSettings();
+  const { scale, lang } = useSettings();
   const size = SIZES[variant] * scale;
   const weight: TextStyle['fontWeight'] = bold || variant === 'hero' || variant === 'title' || variant === 'h2' ? '700' : '400';
-  return <Text maxFontSizeMultiplier={1.2} {...rest} style={[{ fontSize: size, lineHeight: Math.round(size * 1.3), color, fontWeight: weight, textAlign: center ? 'center' : undefined }, style]} />;
+  return <Text maxFontSizeMultiplier={1.2} {...rest} children={tr(rest.children, lang)} style={[{ fontSize: size, lineHeight: Math.round(size * 1.3), color, fontWeight: weight, textAlign: center ? 'center' : undefined }, style]} />;
 }
 
 /* ---------- Buttons ---------- */
@@ -37,6 +41,8 @@ export function Button({ title, onPress, variant = 'primary', icon, loading, dis
 }) {
   const v = BTN[variant];
   const off = disabled || loading;
+  const { lang } = useSettings();
+  title = tr(title, lang);
   return (
     <Pressable
       accessibilityRole="button"
@@ -57,7 +63,8 @@ export function Button({ title, onPress, variant = 'primary', icon, loading, dis
 }
 
 export function Input({ label, error, hint, style, ...props }: TextInputProps & { label?: string; error?: string | null; hint?: string }) {
-  const { scale } = useSettings();
+  const { scale, lang } = useSettings();
+  label = tr(label, lang); hint = tr(hint, lang); error = tr(error, lang); props = { ...props, placeholder: tr(props.placeholder, lang) };
   return (
     <View style={{ marginBottom: space.lg }}>
       {label ? <Txt bold style={{ marginBottom: 6 }}>{label}</Txt> : null}
@@ -74,6 +81,8 @@ export function Input({ label, error, hint, style, ...props }: TextInputProps & 
 }
 
 export function Chip({ label, selected, onPress, icon }: { label: string; selected?: boolean; onPress?: () => void; icon?: IconName }) {
+  const { lang } = useSettings();
+  label = tr(label, lang);
   return (
     <Pressable accessibilityRole="button" accessibilityState={{ selected: !!selected }} onPress={onPress}
       style={{ minHeight: 48, paddingHorizontal: 16, borderRadius: radius.pill, backgroundColor: selected ? colors.primary : '#fff', borderWidth: 2, borderColor: selected ? colors.primary : colors.line, flexDirection: 'row', alignItems: 'center', gap: 6, marginRight: 8, marginBottom: 8 }}>
@@ -156,8 +165,8 @@ export function Header({ title, back = true, right, subtitle }: { title: string;
   );
 }
 
-export function Screen({ children, scroll = true, header, footer, refresh, contentStyle }: {
-  children: React.ReactNode; scroll?: boolean; header?: React.ReactNode; footer?: React.ReactNode;
+export function Screen({ children, scroll = true, header, footer, refresh, contentStyle, overlay }: {
+  children: React.ReactNode; scroll?: boolean; header?: React.ReactNode; footer?: React.ReactNode; overlay?: React.ReactNode;
   refresh?: { refreshing: boolean; onRefresh: () => void }; contentStyle?: StyleProp<ViewStyle>;
 }) {
   const insets = useSafeAreaInsets();
@@ -171,6 +180,7 @@ export function Screen({ children, scroll = true, header, footer, refresh, conte
         </ScrollView>
       ) : <View style={[{ flex: 1 }, contentStyle]}>{children}</View>}
       {footer ? <View style={{ padding: space.lg, paddingBottom: insets.bottom + space.md, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: colors.line }}>{footer}</View> : null}
+      {overlay}
     </View>
   );
 }
@@ -200,13 +210,15 @@ export function Row({ icon, label, value, onPress, color, danger }: { icon: Icon
 
 /* ---------- Dialogs (Alert.alert is a no-op on web, so provide cross-platform helpers) ---------- */
 export function notify(title: string, message?: string) {
+  title = translate(title); message = message ? translate(message) : message;
   if (Platform.OS === 'web') { window.alert(message ? `${title}\n\n${message}` : title); return; }
   Alert.alert(title, message);
 }
 export function confirmDialog(title: string, message: string, okText = 'Yes', destructive = false): Promise<boolean> {
+  title = translate(title); message = translate(message); okText = translate(okText);
   if (Platform.OS === 'web') return Promise.resolve(window.confirm(`${title}\n\n${message}`));
   return new Promise((resolve) => Alert.alert(title, message, [
-    { text: 'No', style: 'cancel', onPress: () => resolve(false) },
+    { text: translate('No'), style: 'cancel', onPress: () => resolve(false) },
     { text: okText, style: destructive ? 'destructive' : 'default', onPress: () => resolve(true) },
   ], { cancelable: true, onDismiss: () => resolve(false) }));
 }
@@ -279,6 +291,7 @@ let toastHost: ((m: ToastMsg) => void) | null = null;
 let toastId = 0;
 /** Friendly, non-blocking confirmation (replaces pop-up alerts for good news). */
 export function toast(text: string, kind: 'ok' | 'info' = 'ok') {
+  text = translate(text);
   if (toastHost) toastHost({ id: ++toastId, text, kind });
   else notify(text);
 }

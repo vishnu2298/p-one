@@ -25,6 +25,8 @@ labelled icons, plain language, and a built-in text-size setting (Normal / Large
 - **Affiliate tracking**: every "View deal" tap creates a tracked click, redirects with your affiliate tag, and conversions come back through a postback.
 - **Invite friends and family**: personal code and link, WhatsApp, SMS to contacts picked on the phone, share sheet. Invitees who join are auto-connected.
 - **Brand partners**: sponsored placements and a brand dashboard. See *Business model*.
+- **Made for India**: UPI "Pay with UPI" deep link, bargaining (make an offer), Call/WhatsApp after a deal is accepted, ₹ lakh/crore formatting, 32 cities with a searchable picker and "Use my location", English/Hindi/Tamil, WhatsApp share pages, community Groups, photos in chat. See [docs/INDIA_PLAN.md](docs/INDIA_PLAN.md).
+- **Compliance**: DPDP consent and data export, Terms/Privacy/Grievance Officer pages, operator takedown tools, prohibited-item filter, GST on brand invoices.
 - **Smooth feel**: skeleton loaders, gentle fade-ins, friendly toasts instead of pop-ups, warm colours and plain wording.
 - **Accessibility**: adjustable text size, high contrast palette, screen-reader labels, large touch targets, no gesture-only actions.
 
@@ -51,7 +53,7 @@ JWT_SECRET=$(openssl rand -hex 32) docker compose up --build   # API :4000, insi
 ## Tests
 
 ```bash
-cd backend && npm test                          # 23 end-to-end API tests (in-memory DB)
+cd backend && npm test                          # 35 end-to-end API tests (in-memory DB)
 cd services/insights && python -m pytest -q     # moderation and price-hint tests
 cd mobile && npx tsc --noEmit                   # type check
 ```

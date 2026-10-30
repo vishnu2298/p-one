@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, Share, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -9,13 +9,16 @@ import { Avatar, Button, Card, Chip, Header, Input, Row, Screen, Txt, confirmDia
 import { colors, TextSize } from '../theme';
 import { CITIES } from '../categories';
 import { Me } from '../types';
+import { CityField } from '../components/CityPicker';
+import { LANGUAGES } from '../i18n';
 
 const SUGGESTED = ['Tech', 'Gadgets', 'Bikes', 'Home decor', 'Fashion', 'Books', 'Fitness', 'Travel', 'Cooking', 'Business', 'Music', 'Gardening'];
 
 export function EditProfile() {
   const nav = useNavigation<any>();
   const { user, setUser } = useAuth();
-  const [f, setF] = useState({ name: user?.name || '', phone: user?.phone || '', city: user?.city || 'Chennai', bio: user?.bio || '', avatar: user?.avatar || '' });
+  const [f, setF] = useState({ name: user?.name || '', phone: user?.phone || '', city: user?.city || 'Chennai', bio: user?.bio || '', avatar: user?.avatar || '', upiId: user?.upiId || '' });
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [interests, setInterests] = useState<string[]>(user?.interests || []);
   const [busy, setBusy] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
@@ -30,7 +33,7 @@ export function EditProfile() {
   const save = async () => {
     if (f.name.trim().length < 2) { notify('Name needed', 'Please enter your name.'); return; }
     setBusy(true);
-    try { const r = await api<{ user: Me }>('/me', { method: 'PATCH', body: { ...f, name: f.name.trim(), interests } }); setUser(r.user); nav.goBack(); } catch (e: any) { notify('Could not save', e.message); } finally { setBusy(false); }
+    try { const r = await api<{ user: Me }>('/me', { method: 'PATCH', body: { ...f, name: f.name.trim(), interests, ...(coords || {}) } }); setUser(r.user); nav.goBack(); } catch (e: any) { notify('Could not save', e.message); } finally { setBusy(false); }
   };
   const toggle = (i: string) => setInterests((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i].slice(0, 8)));
 
@@ -43,9 +46,9 @@ export function EditProfile() {
         </View>
         <Input label="Full name" value={f.name} onChangeText={set('name')} />
         <Input label="Phone (optional)" value={f.phone} onChangeText={set('phone')} keyboardType="phone-pad" hint="Never shown to other people" />
+        <Input label="UPI ID (to receive payments)" value={f.upiId} onChangeText={set('upiId')} autoCapitalize="none" placeholder="name@bank" hint="Shown only to a buyer after you accept their request" />
         <Input label="About me" value={f.bio} onChangeText={set('bio')} multiline maxLength={300} placeholder="A few words about you" style={{ minHeight: 90 }} />
-        <Txt bold style={{ marginBottom: 8 }}>My city</Txt>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 8 }}>{CITIES.map((c) => <Chip key={c} label={c} selected={f.city === c} onPress={() => set('city')(c)} />)}</View>
+        <CityField label="My city" value={f.city} onChange={(c, xy) => { set('city')(c || f.city); setCoords(xy || null); }} />
         <Txt bold style={{ marginVertical: 8 }}>My interests</Txt>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>{SUGGESTED.map((i) => <Chip key={i} label={i} selected={interests.includes(i)} onPress={() => toggle(i)} />)}</View>
       </Screen>
@@ -59,6 +62,7 @@ export function Settings() {
   const nav = useNavigation<any>();
   const { textSize, setTextSize } = useSettings();
   const { signOut, user, setUser } = useAuth();
+  const { lang, setLang } = useSettings();
   const [pw, setPw] = useState({ currentPassword: '', newPassword: '' });
   const [showPw, setShowPw] = useState(false);
   const [del, setDel] = useState('');
@@ -66,6 +70,17 @@ export function Settings() {
 
   const changePw = async () => {
     try { await api('/me/password', { method: 'POST', body: pw }); setPw({ currentPassword: '', newPassword: '' }); setShowPw(false); toast('Password changed'); } catch (e: any) { notify('Could not change password', e.message); }
+  };
+  const downloadData = async () => {
+    try {
+      const data = await api<any>('/me/export');
+      const json = JSON.stringify(data, null, 2);
+      if (Platform.OS === 'web') {
+        const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+        const a = document.createElement('a'); a.href = url; a.download = 'connectly-my-data.json'; a.click(); URL.revokeObjectURL(url);
+      } else await Share.share({ title: 'My Connectly data', message: json });
+      toast('Your data is ready');
+    } catch (e: any) { notify('Could not download', e.message); }
   };
   const deleteAccount = async () => {
     if (!(await confirmDialog('Delete your account?', 'All your listings, chats and connections will be permanently removed.', 'Delete forever', true))) return;
@@ -88,6 +103,17 @@ export function Settings() {
         <View style={{ backgroundColor: colors.bg, borderRadius: 12, padding: 12 }}><Txt>This is how your text will look. Easy to read, easy to use.</Txt></View>
       </Card>
 
+      <Card style={{ marginTop: 16, gap: 12 }}>
+        <Txt variant="h2">Language</Txt>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {LANGUAGES.map((l) => (
+            <Pressable key={l.id} accessibilityRole="radio" accessibilityState={{ selected: lang === l.id }} onPress={() => setLang(l.id)} style={{ flex: 1, minHeight: 60, borderRadius: 14, borderWidth: 2, borderColor: lang === l.id ? colors.primary : colors.line, backgroundColor: lang === l.id ? colors.primarySoft : '#fff', alignItems: 'center', justifyContent: 'center' }}>
+              <Txt bold color={lang === l.id ? colors.primary : colors.text}>{l.label}</Txt>
+            </Pressable>
+          ))}
+        </View>
+      </Card>
+
       <Card style={{ marginTop: 16, gap: 8 }}>
         <Row icon="notifications" label="Notifications" value={user?.pushEnabled ? 'On: messages, requests and updates' : 'Off: you will still see them in the app'} onPress={async () => { try { setUser((await api<{ user: Me }>('/me', { method: 'PATCH', body: { pushEnabled: !user?.pushEnabled } })).user); toast(user?.pushEnabled ? 'Notifications turned off' : 'Notifications turned on'); } catch (e: any) { notify('Could not change', e.message); } }} />
       </Card>
@@ -102,6 +128,8 @@ export function Settings() {
           <Button title="Save new password" onPress={changePw} />
         </View> : null}
         <Row icon="shield-checkmark" label="Trust and safety" onPress={() => nav.navigate('Safety')} />
+        <Row icon="document-text" label="Terms and policies" onPress={() => nav.navigate('Legal', { doc: 'terms' })} />
+        <Row icon="download" label="Download my data" onPress={downloadData} />
         <Row icon="log-out" label="Log out" onPress={async () => { if (await confirmDialog('Log out?', 'You can log back in any time.', 'Log out')) await signOut(); }} />
       </Card>
 

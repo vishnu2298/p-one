@@ -8,7 +8,7 @@ import { Button, Card, Chip, Empty, FadeIn, Header, Input, Pill, Screen, Section
 import { colors, space } from '../theme';
 import { Listing, Me } from '../types';
 
-type Summary = { brandName: string; commissionRate: number; ads: { spend: number; clicks: number; impressions: number }; brokerage: { fees: number; deals: number }; totalDue: number };
+type Summary = { brandName: string; gstin: string; subtotal: number; gstRate: number; gst: number; commissionRate: number; ads: { spend: number; clicks: number; impressions: number }; brokerage: { fees: number; deals: number }; totalDue: number };
 type AdRow = { id: number; title: string; status: string; placement: string; costPerClick: number; dailyBudget: number; impressions: number; clicks: number; spend: number; ctr: number };
 
 const Tile = ({ label, value, color = colors.text }: { label: string; value: string; color?: string }) => (
@@ -19,12 +19,13 @@ const Tile = ({ label, value, color = colors.text }: { label: string; value: str
 export function BrandHub() {
   const { user, setUser } = useAuth();
   const [brandName, setBrandName] = useState('');
+  const [gstin, setGstin] = useState('');
   const [busy, setBusy] = useState(false);
   const isBrand = !!user?.isBrand;
 
   const become = async () => {
     setBusy(true);
-    try { setUser((await api<{ user: Me }>('/me/brand', { method: 'POST', body: { brandName } })).user); toast('You are now a brand partner'); } catch (e: any) { notify('Could not continue', e.message); } finally { setBusy(false); }
+    try { setUser((await api<{ user: Me }>('/me/brand', { method: 'POST', body: { brandName, gstin: gstin.trim() || undefined } })).user); toast('You are now a brand partner'); } catch (e: any) { notify('Could not continue', e.message); } finally { setBusy(false); }
   };
 
   if (!isBrand) {
@@ -44,6 +45,7 @@ export function BrandHub() {
             </Card>
             <View style={{ marginTop: space.lg }}>
               <Input label="Your brand or shop name" value={brandName} onChangeText={setBrandName} placeholder="e.g. Nair Home Studio" maxLength={60} />
+              <Input label="GSTIN (optional)" value={gstin} onChangeText={(v) => setGstin(v.toUpperCase())} autoCapitalize="characters" maxLength={15} placeholder="e.g. 33ABCDE1234F1Z5" hint="Needed for GST invoices. You can add it later." />
               <Button title="Become a brand partner" icon="storefront" variant="buy" onPress={become} loading={busy} disabled={brandName.trim().length < 2} />
               <Txt variant="small" color={colors.sub} center style={{ marginTop: 12 }}>Joining is free. You can switch back to a personal account any time.</Txt>
             </View>
@@ -95,9 +97,10 @@ function BrandDashboard() {
           <Tile label="Ad clicks" value={String(s.ads.clicks)} color={colors.primary} />
           <Tile label="Ad spend" value={money(s.ads.spend)} />
           <Tile label={`Brokerage (${Math.round(s.commissionRate * 100)}% on ${s.brokerage.deals} deals)`} value={money(s.brokerage.fees)} />
-          <Tile label="Total due" value={money(s.totalDue)} color={colors.sell} />
+          <Tile label={`GST (${Math.round(s.gstRate * 100)}%)`} value={money(s.gst)} />
+          <Tile label="Total due (incl. GST)" value={money(s.totalDue)} color={colors.sell} />
         </View>
-        <Txt variant="tiny" color={colors.sub} style={{ marginTop: 8 }}>Billed as an invoice. Individuals using Connectly are never charged.</Txt>
+        <Txt variant="tiny" color={colors.sub} style={{ marginTop: 8 }}>Billed as a GST invoice{s.gstin ? ` to ${s.gstin}` : ''}. Individuals using Connectly are never charged.</Txt>
       </FadeIn> : null}
 
       <SectionTitle title="Your ads" action={creating ? undefined : 'New ad'} onAction={() => setCreating(true)} />

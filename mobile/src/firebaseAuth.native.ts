@@ -1,36 +1,54 @@
-// Firebase sign-in, native implementation (iOS/Android). Requires a development build, not Expo Go.
-import { getAuth, getIdToken, GoogleAuthProvider, signInWithCredential, signInWithPhoneNumber, signOut } from '@react-native-firebase/auth';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-
+// Firebase sign-in, native implementation (iOS/Android).
+// The native Firebase modules are loaded lazily: in Expo Go they do not exist, so phone/Google sign-in is simply
+// reported as unavailable (the app falls back to the server's demo mode or email) instead of crashing.
 export type PhoneSession = { confirm: (code: string) => Promise<string> };
 
-// Native config comes from google-services.json / GoogleService-Info.plist (see README), so a Google web client id is the only runtime setting.
 const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-export const firebaseConfigured = !!webClientId;
+
+type Native = { auth: any; gsi: any };
+let cached: Native | null | undefined;
+function native(): Native | null {
+  if (cached !== undefined) return cached;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    cached = { auth: require('@react-native-firebase/auth'), gsi: require('@react-native-google-signin/google-signin') };
+  } catch { cached = null; }
+  return cached;
+}
+
+/** True only in a development/production build that includes the native Firebase modules and a Google client id. */
+export const firebaseConfigured = !!webClientId && !!native();
 
 export async function startPhone(phone: string): Promise<PhoneSession> {
-  const conf = await signInWithPhoneNumber(getAuth(), phone);
+  const n = native();
+  if (!n) throw new Error('Phone sign-in needs the full app build (not Expo Go).');
+  const conf = await n.auth.signInWithPhoneNumber(n.auth.getAuth(), phone);
   return {
     confirm: async (code) => {
       const cred = await conf.confirm(code);
       if (!cred?.user) throw new Error('Could not verify the code');
-      return getIdToken(cred.user);
+      return n.auth.getIdToken(cred.user);
     },
   };
 }
 
 export async function googleSignIn(): Promise<string> {
+  const n = native();
+  if (!n) throw new Error('Google sign-in needs the full app build (not Expo Go).');
+  const { GoogleSignin } = n.gsi;
   GoogleSignin.configure({ webClientId });
   await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
   const res: any = await GoogleSignin.signIn();
   const idToken = res?.data?.idToken ?? res?.idToken;
   if (!idToken) throw Object.assign(new Error('Sign-in was cancelled.'), { code: 'SIGN_IN_CANCELLED' });
-  const cred = await signInWithCredential(getAuth(), GoogleAuthProvider.credential(idToken));
-  return getIdToken(cred.user);
+  const cred = await n.auth.signInWithCredential(n.auth.getAuth(), n.auth.GoogleAuthProvider.credential(idToken));
+  return n.auth.getIdToken(cred.user);
 }
 
 export async function firebaseSignOut() {
-  try { await signOut(getAuth()); await GoogleSignin.signOut(); } catch { /* already signed out */ }
+  const n = native();
+  if (!n) return;
+  try { await n.auth.signOut(n.auth.getAuth()); await n.gsi.GoogleSignin.signOut(); } catch { /* already signed out */ }
 }
 
 export function friendlyAuthError(e: any): string {

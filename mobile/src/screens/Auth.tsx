@@ -5,9 +5,15 @@ import { useNavigation } from '@react-navigation/native';
 import { Button, Chip, Header, Input, Screen, Txt, notify } from '../ui';
 import { Logo } from '../components/Logo';
 import { colors, space } from '../theme';
-import { useAuth } from '../context';
+import { useAuth, useSettings } from '../context';
+import { LANGUAGES } from '../i18n';
+import { FadeIn } from '../ui';
+import { haptic } from '../motion';
 import { CITIES } from '../categories';
 import { useGoogle } from './SignIn';
+import { CityField } from '../components/CityPicker';
+import { ConsentCheck } from '../components/Consent';
+import { toast } from '../ui';
 
 const SLIDES = [
   { icon: 'cart', color: colors.buy, bg: colors.buySoft, title: 'Buy what you need', text: 'Find phones, furniture, bikes and more from people near you.' },
@@ -17,7 +23,25 @@ const SLIDES = [
 
 export function Onboarding() {
   const { finishOnboarding } = useAuth();
+  const { langChosen, setLang } = useSettings();
   const [i, setI] = useState(0);
+  if (!langChosen) {
+    return (
+      <Screen scroll={false} contentStyle={{ padding: space.xl, justifyContent: 'center', gap: 14 }}>
+        <View style={{ alignItems: 'center', gap: 8, marginBottom: 12 }}>
+          <Logo size={84} />
+          <Txt variant="title" center>Choose your language</Txt>
+          <Txt center color={colors.sub}>भाषा चुनें  ·  மொழியைத் தேர்ந்தெடுக்கவும்</Txt>
+        </View>
+        {LANGUAGES.map((l, k) => (
+          <FadeIn key={l.id} index={k}>
+            <Button title={l.label} variant={l.id === 'en' ? 'secondary' : 'primary'} onPress={() => { haptic.tap(); setLang(l.id); }} style={{ minHeight: 72 }} />
+          </FadeIn>
+        ))}
+        <Txt variant="small" color={colors.sub} center>You can change this any time in Settings.</Txt>
+      </Screen>
+    );
+  }
   const s = SLIDES[i];
   const last = i === SLIDES.length - 1;
   return (
@@ -43,7 +67,9 @@ export function Onboarding() {
 export function Welcome() {
   const nav = useNavigation<any>();
   const google = useGoogle();
-  const { referralCode } = useAuth();
+  const { referralCode, consent } = useAuth();
+  const [tried, setTried] = useState(false);
+  const guard = (fn: () => void) => () => { if (!consent) { setTried(true); haptic.warn(); toast('Please tick the box to agree before continuing', 'info'); return; } fn(); };
   return (
     <Screen contentStyle={{ padding: space.xl, justifyContent: 'center', gap: 16, flexGrow: 1 }}>
       <View style={{ alignItems: 'center', gap: 8 }}>
@@ -53,9 +79,10 @@ export function Welcome() {
       </View>
       <Txt variant="h2" center style={{ marginVertical: 8 }}>Everything you need, in one place.</Txt>
       {referralCode ? <View style={{ backgroundColor: colors.buySoft, borderRadius: 14, padding: 12 }}><Txt bold color={colors.buy} center>You were invited! Code {referralCode} will be added when you sign up.</Txt></View> : null}
-      <Button title="Continue with phone" icon="call" onPress={() => nav.navigate('PhoneSignIn')} />
-      {google.available ? <Button title="Continue with Google" icon="logo-google" variant="secondary" loading={google.busy} onPress={google.run} /> : null}
-      <Button title="Use email instead" icon="mail" variant="light" onPress={() => nav.navigate('Register')} />
+      <ConsentCheck error={tried} />
+      <Button title="Continue with phone" icon="call" onPress={guard(() => nav.navigate('PhoneSignIn'))} />
+      {google.available ? <Button title="Continue with Google" icon="logo-google" variant="secondary" loading={google.busy} onPress={guard(google.run)} /> : null}
+      <Button title="Use email instead" icon="mail" variant="light" onPress={guard(() => nav.navigate('Register'))} />
       <Pressable accessibilityRole="button" onPress={() => nav.navigate('Login')} style={{ minHeight: 56, alignItems: 'center', justifyContent: 'center' }}>
         <Txt>Already have an email account? <Txt bold color={colors.primary}>Log in</Txt></Txt>
       </Pressable>
@@ -103,7 +130,7 @@ export function Login() {
 export function Register() {
   const nav = useNavigation<any>();
   const { signUp } = useAuth();
-  const { referralCode } = useAuth();
+  const { referralCode, consent } = useAuth();
   const [f, setF] = useState({ name: '', email: '', password: '', phone: '', city: 'Chennai', referralCode: referralCode || '' });
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -114,8 +141,9 @@ export function Register() {
     if (f.name.trim().length < 2) e.name = 'Please enter your full name';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) e.email = 'Please enter a valid email address';
     if (f.password.length < 6) e.password = 'Password must be at least 6 characters';
+    if (!consent) { toast('Please tick the box to agree before continuing', 'info'); }
     setErrors(e);
-    if (Object.keys(e).length) return;
+    if (Object.keys(e).length || !consent) return;
     setBusy(true);
     try { await signUp({ ...f, name: f.name.trim(), email: f.email.trim(), referralCode: f.referralCode.trim() || undefined }); } catch (err: any) { notify('Could not create account', err.message); setBusy(false); }
   };
@@ -127,12 +155,10 @@ export function Register() {
         <Input label="Password" value={f.password} onChangeText={set('password')} error={errors.password} secureTextEntry hint="At least 6 characters" placeholder="Choose a password" />
         <Input label="Phone (optional)" value={f.phone} onChangeText={set('phone')} keyboardType="phone-pad" placeholder="Only shared if you choose" />
         <Input label="Invite code (optional)" value={f.referralCode} onChangeText={(v) => set('referralCode')(v.toUpperCase())} autoCapitalize="characters" placeholder="From a friend or family member" maxLength={12} />
-        <Txt bold style={{ marginBottom: 8 }}>Your city</Txt>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16 }}>
-          {CITIES.map((c) => <Chip key={c} label={c} selected={f.city === c} onPress={() => set('city')(c)} />)}
-        </View>
+        <CityField label="Your city" value={f.city} onChange={(c) => set('city')(c || 'Chennai')} />
+        <ConsentCheck />
+        <View style={{ height: 12 }} />
         <Button title="Create my account" onPress={submit} loading={busy} />
-        <Txt variant="small" color={colors.sub} center style={{ marginTop: 12 }}>By continuing you agree to keep Connectly safe and friendly for everyone.</Txt>
         <Pressable accessibilityRole="button" onPress={() => nav.replace('Login')} style={{ minHeight: 56, alignItems: 'center', justifyContent: 'center' }}>
           <Txt>Already have an account? <Txt bold color={colors.primary}>Log in</Txt></Txt>
         </Pressable>

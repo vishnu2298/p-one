@@ -2,8 +2,11 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { api, clock, money } from '../api';
+import { api, clock, imageUrl, money } from '../api';
+import { haptic } from '../motion';
 import { Avatar, Header, Loading, Screen, Txt, notify, ErrorState } from '../ui';
 import { colors, radius, space } from '../theme';
 import { useAuth, useSettings } from '../context';
@@ -46,7 +49,7 @@ export function Chat() {
   useEffect(() => { void poll(); const t = setInterval(poll, 3000); return () => clearInterval(t); }, [poll]);
   useEffect(() => { setTimeout(() => scroller.current?.scrollToEnd({ animated: true }), 50); }, [msgs.length]);
 
-  const send = async (body: string, type: 'text' | 'location' = 'text', fromComposer = false) => {
+  const send = async (body: string, type: 'text' | 'location' | 'image' = 'text', fromComposer = false) => {
     if (!body.trim() || sending) return;
     setSending(true);
     try {
@@ -55,7 +58,17 @@ export function Chat() {
       setMsgs((p) => (p.some((m) => m.id === r.message.id) ? p : [...p, r.message]));
       if (fromComposer) setText('');
       if (r.safetyTip) setTip(r.safetyTip);
+      haptic.tap();
     } catch (e: any) { notify('Message not sent', e.message); } finally { setSending(false); }
+  };
+
+  const sendPhoto = async () => {
+    try {
+      const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], base64: true, quality: 0.5 });
+      if (r.canceled || !r.assets[0]?.base64) return;
+      const up = await api<{ url: string }>('/uploads', { method: 'POST', body: { data: r.assets[0].base64, mime: r.assets[0].mimeType || 'image/jpeg' } });
+      await send(up.url, 'image');
+    } catch (e: any) { notify('Photo not sent', e.message); }
   };
 
   const shareLocation = async () => {
@@ -107,6 +120,8 @@ export function Chat() {
                       <Txt color={mine ? '#fff' : colors.text}>{loc.label}</Txt>
                       {loc.lat != null ? <Txt variant="tiny" bold color={mine ? '#fff' : colors.primary}>Tap to open map</Txt> : null}
                     </Pressable>
+                  ) : m.type === 'image' ? (
+                    <Image source={{ uri: imageUrl(m.body) }} accessibilityLabel="Photo" style={{ width: 220, height: 220, borderRadius: 14, backgroundColor: colors.primarySoft }} resizeMode="cover" />
                   ) : <Txt color={mine ? '#fff' : colors.text}>{m.body}</Txt>}
                 </View>
                 <Txt variant="tiny" color={colors.sub} style={{ alignSelf: mine ? 'flex-end' : 'flex-start', marginTop: 2 }}>{clock(m.createdAt)}{mine && m.readAt ? ' · Seen' : ''}</Txt>
@@ -122,6 +137,7 @@ export function Chat() {
           </ScrollView>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingHorizontal: 10 }}>
             <Pressable accessibilityRole="button" accessibilityLabel="Share my location" onPress={shareLocation} style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: colors.buySoft, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="location" size={26} color={colors.buy} /></Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Send a photo" onPress={sendPhoto} style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="image" size={26} color={colors.primary} /></Pressable>
             <TextInput accessibilityLabel="Type a message" value={text} onChangeText={setText} placeholder="Type a message…" placeholderTextColor="#7A8794" multiline maxLength={1000}
               style={{ flex: 1, minHeight: 52, maxHeight: 120, borderRadius: 26, borderWidth: 2, borderColor: colors.line, paddingHorizontal: 18, paddingVertical: 12, fontSize: 18 * scale, color: colors.text }} />
             <Pressable accessibilityRole="button" accessibilityLabel="Send message" onPress={() => send(text, 'text', true)} disabled={!text.trim() || sending} style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', opacity: !text.trim() || sending ? 0.4 : 1 }}><Ionicons name="send" size={24} color="#fff" /></Pressable>

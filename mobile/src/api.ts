@@ -12,6 +12,7 @@ export const API_URL = defaultBase();
 let token: string | null = null;
 let onUnauthorized: (() => void) | null = null;
 export const setToken = (t: string | null) => { token = t; };
+export const hasToken = () => !!token;
 export const setUnauthorizedHandler = (fn: () => void) => { onUnauthorized = fn; };
 
 export class ApiError extends Error {
@@ -19,19 +20,40 @@ export class ApiError extends Error {
   constructor(status: number, message: string) { super(message); this.status = status; }
 }
 
+// Connectivity tracking, so the UI can show an "offline" banner and recover by itself.
+type NetListener = (online: boolean) => void;
+const netListeners = new Set<NetListener>();
+let online = true;
+const setOnline = (v: boolean) => { if (v !== online) { online = v; netListeners.forEach((l) => l(v)); } };
+export const onNetChange = (fn: NetListener) => { netListeners.add(fn); return () => { netListeners.delete(fn); }; };
+export const isOnline = () => online;
+
+const TIMEOUT_MS = 20000;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 export async function api<T = any>(path: string, opts: { method?: string; body?: unknown; signal?: AbortSignal } = {}): Promise<T> {
-  let res: Response;
-  try {
-    res = await fetch(API_URL + path, {
-      method: opts.method || 'GET',
-      headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
-      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-      signal: opts.signal,
-    });
-  } catch (e: any) {
-    if (e?.name === 'AbortError') throw e;
-    throw new ApiError(0, 'Cannot reach the server. Please check your internet connection and try again.');
+  const method = opts.method || 'GET';
+  const attempts = method === 'GET' ? 2 : 1; // only reads are safe to retry
+  let res: Response | null = null;
+  for (let i = 0; i < attempts && !res; i++) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+    opts.signal?.addEventListener('abort', () => ctrl.abort());
+    try {
+      res = await fetch(API_URL + path, {
+        method,
+        headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+        body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+        signal: ctrl.signal,
+      });
+      setOnline(true);
+    } catch (e: any) {
+      if (opts.signal?.aborted) throw e;
+      setOnline(false);
+      if (i < attempts - 1) await sleep(700);
+    } finally { clearTimeout(timer); }
   }
+  if (!res) throw new ApiError(0, 'Cannot reach the server. Please check your internet connection and try again.');
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     if (res.status === 401 && token && onUnauthorized) onUnauthorized();
@@ -49,6 +71,15 @@ export const storage = {
 };
 
 export const money = (n: number) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+/** Indian short form for big amounts: ₹1.2 Lakh, ₹2.5 Cr. Below a lakh the full amount is shown. */
+export function moneyShort(n: number) {
+  const v = Math.round(n);
+  const trim = (x: number) => String(Math.round(x * 10) / 10).replace(/\.0$/, '');
+  if (v >= 10000000) return `₹${trim(v / 10000000)} Cr`;
+  if (v >= 100000) return `₹${trim(v / 100000)} Lakh`;
+  return money(v);
+}
 
 export function timeAgo(ts: string) {
   const t = new Date(ts.replace(' ', 'T') + 'Z').getTime();

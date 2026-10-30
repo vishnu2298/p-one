@@ -8,6 +8,7 @@ import { Button, Chip, Header, Input, Screen, Txt, notify } from '../ui';
 import { colors, radius, space } from '../theme';
 import { CITIES } from '../categories';
 import { Me } from '../types';
+import { CityField } from '../components/CityPicker';
 import { firebaseConfigured, friendlyAuthError, googleSignIn, startPhone, PhoneSession } from '../firebaseAuth';
 
 /** 'firebase' = real Firebase; 'dev' = server demo mode (phone code is always 123456); 'none' = not available. */
@@ -154,8 +155,7 @@ export function CompleteProfile() {
           <Txt color={colors.sub} center>This is how others will see you.</Txt>
         </View>
         <Input label="Your name" value={name} onChangeText={(v) => { setName(v); setError(null); }} error={error} placeholder="e.g. Ravi Kumar" autoComplete="name" />
-        <Txt bold style={{ marginBottom: 8 }}>Your city</Txt>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>{CITIES.map((c) => <Chip key={c} label={c} selected={city === c} onPress={() => setCity(c)} />)}</View>
+        <CityField label="Your city" value={city} onChange={(c) => setCity(c || 'Chennai')} />
         <Pressable accessibilityRole="button" onPress={() => void signOut()} style={{ minHeight: 56, alignItems: 'center', justifyContent: 'center' }}><Txt color={colors.sub}>Use a different account</Txt></Pressable>
       </Screen>
     </KeyboardAvoidingView>

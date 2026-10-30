@@ -9,7 +9,7 @@ const ALL = [
 ];
 const ROLES = {
   owner: ALL,
-  manager: ALL.filter((p) => !['business.manage', 'team.manage', 'accounting.write'].includes(p)),
+  manager: ALL.filter((p) => !['business.manage', 'team.manage', 'accounting.write', 'clinical.read', 'clinical.write'].includes(p)),
   cashier: ['products.read', 'sales.read', 'sales.write', 'customers.read', 'customers.write', 'inventory.read'],
   inventory: ['products.read', 'products.write', 'inventory.read', 'inventory.write', 'purchases.read', 'purchases.write', 'suppliers.read', 'suppliers.write', 'dashboard.read'],
   accountant: ['accounting.read', 'accounting.write', 'reports.read', 'expenses.write', 'sales.read', 'purchases.read', 'customers.read', 'suppliers.read', 'products.read', 'inventory.read', 'dashboard.read'],

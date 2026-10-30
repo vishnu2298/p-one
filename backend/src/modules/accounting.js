@@ -12,7 +12,7 @@ const CHART = [
   ['4000', 'Sales revenue', 'income'], ['4100', 'Sales returns', 'income'], ['4900', 'Other income', 'income'],
   ['5000', 'Cost of goods sold', 'expense'], ['5100', 'Inventory loss and adjustments', 'expense'],
   ['6000', 'Rent', 'expense'], ['6010', 'Salaries and wages', 'expense'], ['6020', 'Utilities', 'expense'],
-  ['6030', 'Marketing', 'expense'], ['6040', 'Transport', 'expense'], ['6050', 'Payment gateway fees', 'expense'], ['6090', 'Other expenses', 'expense'],
+  ['6030', 'Marketing', 'expense'], ['6040', 'Transport', 'expense'], ['6050', 'Payment gateway fees', 'expense'], ['6060', 'Consumables used', 'expense'], ['6090', 'Other expenses', 'expense'],
 ];
 const EXPENSE_CODES = CHART.filter((c) => c[0].startsWith('6')).map((c) => c[0]);
 const METHOD_ACCOUNT = { cash: '1000', upi: '1010', card: '1010', bank: '1010', online: '1010', wallet: '1010' };
@@ -28,8 +28,14 @@ function accountId(db, businessId, code) {
   let m = acctCache.get(db); if (!m) { m = new Map(); acctCache.set(db, m); }
   const key = `${businessId}:${code}`;
   if (!m.has(key)) {
-    const a = db.prepare('SELECT id FROM biz_accounts WHERE business_id = ? AND code = ?').get(businessId, code);
-    if (!a) throw new HttpError(400, `Unknown account ${code}`);
+    let a = db.prepare('SELECT id FROM biz_accounts WHERE business_id = ? AND code = ?').get(businessId, code);
+    if (!a) {
+      // Charts grow over time: add a standard account lazily so existing businesses keep working.
+      const std = CHART.find((c) => c[0] === code);
+      if (!std) throw new HttpError(400, `Unknown account ${code}`);
+      db.prepare('INSERT OR IGNORE INTO biz_accounts (business_id, code, name, type, system) VALUES (?,?,?,?,1)').run(businessId, std[0], std[1], std[2]);
+      a = db.prepare('SELECT id FROM biz_accounts WHERE business_id = ? AND code = ?').get(businessId, code);
+    }
     m.set(key, a.id);
   }
   return m.get(key);

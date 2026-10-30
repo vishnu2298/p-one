@@ -8,7 +8,7 @@
     "start": "node --no-warnings --env-file-if-exists=.env src/server.js",
     "demo": "node --no-warnings --env-file=demo.env src/server.js",
     "seed": "node --no-warnings --env-file-if-exists=.env src/seed.js",
-    "test": "node --no-warnings --test test/api.test.js test/integrations.test.js test/revenue.test.js test/india.test.js test/business.test.js"
+    "test": "node --no-warnings --test test/api.test.js test/integrations.test.js test/revenue.test.js test/india.test.js test/business.test.js test/storefront.test.js"
   },
   "engines": {
     "node": ">=22.13"

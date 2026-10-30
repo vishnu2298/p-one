@@ -1,10 +1,10 @@
 const express = require('express');
-const { HttpError, str, CATEGORIES, CATEGORY_IDS, CITIES, jitter } = require('../util');
+const { HttpError, str, CATEGORIES, CATEGORY_IDS, CITIES, CITY_LIST, jitter } = require('../util');
 const insights = require('../insights');
 
 const CONDITIONS = ['Like New', 'Good', 'Fair', 'Needs Repair'];
 
-module.exports = ({ db, ser, auth }) => {
+module.exports = ({ db, ser, auth, limits }) => {
   const r = express.Router();
   const getListing = db.prepare('SELECT * FROM listings WHERE id = ?');
 
@@ -14,12 +14,13 @@ module.exports = ({ db, ser, auth }) => {
     );
     res.json({ categories: CATEGORIES.map((c) => ({ ...c, count: counts[c.id] || 0 })) });
   });
-  r.get('/cities', (req, res) => res.json({ cities: Object.keys(CITIES) }));
+  r.get('/cities', (req, res) => res.json({ cities: Object.keys(CITIES), details: CITY_LIST }));
 
   function query(req, forcedWhere = [], forcedParams = []) {
     const q = req.query;
     const where = [...forcedWhere];
     const params = [...forcedParams];
+    where.push("l.status != 'removed'");
     if (q.status !== 'all' && !q.sellerId) where.push("l.status = 'active'");
     if (q.q) {
       const like = `%${String(q.q).trim().replace(/[%_]/g, '')}%`;
@@ -69,7 +70,7 @@ module.exports = ({ db, ser, auth }) => {
 
   r.get('/listings/:id', auth.optional, (req, res) => {
     const l = getListing.get(req.params.id);
-    if (!l) throw new HttpError(404, 'This item is no longer available');
+    if (!l || (l.status === 'removed' && (!req.user || req.user.id !== l.seller_id))) throw new HttpError(404, 'This item is no longer available');
     if (!req.user || req.user.id !== l.seller_id) db.prepare('UPDATE listings SET views = views + 1 WHERE id = ?').run(l.id);
     res.json({ listing: ser.listing(getListing.get(l.id), req.user) });
   });
@@ -93,7 +94,7 @@ module.exports = ({ db, ser, auth }) => {
     };
   }
 
-  r.post('/listings', auth.required, async (req, res) => {
+  r.post('/listings', auth.required, limits.create, async (req, res) => {
     const d = await readBody(req.body);
     const [clat, clng] = CITIES[d.city];
     const sameCity = d.city === req.user.city && req.user.lat != null;

@@ -23,6 +23,13 @@ const config = {
   inviteBaseUrl: (process.env.INVITE_BASE_URL || '').replace(/\/$/, ''),
   androidStoreUrl: process.env.ANDROID_STORE_URL || '',
   iosStoreUrl: process.env.IOS_STORE_URL || '',
+  companyName: process.env.COMPANY_NAME || 'Connectly',
+  companyAddress: process.env.COMPANY_ADDRESS || '[Registered address: set COMPANY_ADDRESS]',
+  supportEmail: process.env.SUPPORT_EMAIL || 'support@example.com',
+  grievanceName: process.env.GRIEVANCE_OFFICER_NAME || '[Grievance Officer: set GRIEVANCE_OFFICER_NAME]',
+  grievanceEmail: process.env.GRIEVANCE_EMAIL || 'grievance@example.com',
+  grievancePhone: process.env.GRIEVANCE_PHONE || '',
+  gstRate: 0.18,
   isProd: process.env.NODE_ENV === 'production',
 };
 

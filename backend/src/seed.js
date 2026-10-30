@@ -57,6 +57,28 @@ function seed(db) {
   const adTarget = listingIds[1];
   db.prepare("INSERT INTO ads (brand_id,title,body,cta_label,target_listing_id,placement,cost_per_click,daily_budget) VALUES (?,?,?,?,?,'all',3,300)").run(ids[2], 'Comfort for your home office', 'Ergonomic chairs and tables from Nair Home Studio.', 'See the chair', adTarget);
 
+  // Phones and UPI IDs (fake demo values) so contact reveal and Pay with UPI can be tried.
+  const setContact = db.prepare('UPDATE users SET phone = ?, upi_id = ? WHERE id = ?');
+  setContact.run('+919876500000', 'demo.user@okhdfcbank', ids[0]);
+  setContact.run('+919876500001', 'rohit.kumar@oksbi', ids[1]);
+  setContact.run('+919876500002', 'sneha.nair@ybl', ids[2]);
+  setContact.run('+919876500003', '', ids[3]);
+
+  // Community groups.
+  const insG = db.prepare('INSERT INTO groups (name, description, city, interest, owner_id) VALUES (?,?,?,?,?)');
+  const addM = db.prepare('INSERT OR IGNORE INTO group_members (group_id, user_id) VALUES (?,?)');
+  const gMsg = db.prepare('INSERT INTO group_messages (group_id, sender_id, body) VALUES (?,?,?)');
+  const mkGroup = (name, desc, city, interest, owner, members, chats) => {
+    const gid = Number(insG.run(name, desc, city, interest, ids[owner]).lastInsertRowid);
+    [owner, ...members].forEach((m) => addM.run(gid, ids[m]));
+    chats.forEach(([who, text]) => gMsg.run(gid, ids[who], text));
+    return gid;
+  };
+  mkGroup('Chennai Bike Riders', 'Weekend rides, bike servicing tips and spare parts. All brands welcome.', 'Chennai', 'Bikes', 1, [0, 7], [[1, 'Anyone riding to Mahabalipuram this Sunday?'], [7, 'Count me in! Leaving 6 AM from Adyar.']]);
+  mkGroup('Home Decor Ideas', 'Share and find ideas for making your home beautiful on a budget.', '', 'Home decor', 2, [0, 5], [[2, 'Look at this sofa makeover with just new covers!']]);
+  mkGroup('Senior Citizens: Tech Help', 'A friendly place to ask any phone or app question. No question is silly.', '', 'Tech', 3, [0, 5], [[3, 'Welcome everyone. Ask anything about WhatsApp, UPI or this app.'], [5, 'How do I send a photo in a chat?']]);
+  mkGroup('Tamil Nadu Buy & Sell', 'Local buying and selling tips across Tamil Nadu.', '', 'Shopping', 4, [0, 1], []);
+
   // Connections: demo is connected with Arun, has requests from Rohit & Sneha.
   const conn = db.prepare('INSERT INTO connections (requester_id, addressee_id, status) VALUES (?,?,?)');
   conn.run(ids[0], ids[3], 'accepted');

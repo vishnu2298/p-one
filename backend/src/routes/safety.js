@@ -9,7 +9,7 @@ module.exports = ({ db, auth }) => {
   const r = express.Router();
 
   r.post('/reports', auth.required, (req, res) => {
-    const type = ['listing', 'user', 'message'].includes(req.body.targetType) ? req.body.targetType : null;
+    const type = ['listing', 'user', 'message', 'group'].includes(req.body.targetType) ? req.body.targetType : null;
     if (!type || !Number(req.body.targetId)) throw new HttpError(400, 'Nothing to report');
     const reason = str(req.body.reason, { min: 1, max: 80, name: 'Reason' });
     db.prepare('INSERT INTO reports (reporter_id,target_type,target_id,reason,details) VALUES (?,?,?,?,?)')

@@ -24,6 +24,12 @@ const USERS_DDL = (name) => `
     account_type TEXT DEFAULT 'individual',
     brand_name TEXT DEFAULT '',
     commission_rate REAL DEFAULT 0.05,
+    upi_id TEXT DEFAULT '',
+    gstin TEXT DEFAULT '',
+    language TEXT DEFAULT 'en',
+    consent_at TEXT,
+    consent_version TEXT,
+    suspended INTEGER DEFAULT 0,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     last_seen TEXT DEFAULT CURRENT_TIMESTAMP
   );`;
@@ -240,7 +246,35 @@ function open(file = config.dbFile) {
   `);
   // Columns added after first release (CREATE TABLE IF NOT EXISTS does not alter existing tables).
   addColumns(db, 'users', { account_type: "TEXT DEFAULT 'individual'", brand_name: "TEXT DEFAULT ''", commission_rate: 'REAL DEFAULT 0.05' });
-  addColumns(db, 'orders', { commission: 'INTEGER DEFAULT 0' });
+  addColumns(db, 'users', { upi_id: "TEXT DEFAULT ''", gstin: "TEXT DEFAULT ''", language: "TEXT DEFAULT 'en'", consent_at: 'TEXT', consent_version: 'TEXT', suspended: 'INTEGER DEFAULT 0' });
+  addColumns(db, 'orders', { commission: 'INTEGER DEFAULT 0', list_price: 'INTEGER' });
+  addColumns(db, 'reports', { status: "TEXT DEFAULT 'open'", resolution: "TEXT DEFAULT ''", resolved_at: 'TEXT' });
+  db.exec(`
+  CREATE TABLE IF NOT EXISTS groups (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    city TEXT DEFAULT '',
+    interest TEXT DEFAULT '',
+    owner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS group_members (
+    group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    joined_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (group_id, user_id)
+  );
+  CREATE TABLE IF NOT EXISTS group_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    body TEXT NOT NULL,
+    type TEXT DEFAULT 'text',
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_gmsg ON group_messages(group_id, id);
+  `);
   backfillReferralCodes(db);
   return db;
 }

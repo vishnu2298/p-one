@@ -5,6 +5,10 @@ const { HttpError, str, CITIES, jitter } = require('../util');
 const { verifyIdToken } = require('../firebase');
 const { applyReferral, ensureCode } = require('../referral');
 const config = require('../config');
+const { VERSION: CONSENT_VERSION } = require('./legal');
+const UPI_RE = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
+const LANGS = ['en', 'hi', 'ta'];
+const needConsent = (b) => { if (b.consent !== true) throw new HttpError(400, 'Please accept the Terms and Privacy Policy to continue'); };
 
 module.exports = ({ db, ser, auth, notify }) => {
   const r = express.Router();
@@ -12,6 +16,7 @@ module.exports = ({ db, ser, auth, notify }) => {
   const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   r.post('/auth/register', (req, res) => {
+    needConsent(req.body);
     const name = str(req.body.name, { min: 2, max: 80, name: 'Name' });
     const email = str(req.body.email, { min: 1, max: 160, name: 'Email' }).toLowerCase();
     const password = str(req.body.password, { min: 6, max: 100, name: 'Password' });
@@ -20,8 +25,8 @@ module.exports = ({ db, ser, auth, notify }) => {
     const city = CITIES[req.body.city] ? req.body.city : 'Chennai';
     const [lat, lng] = CITIES[city];
     const info = db
-      .prepare('INSERT INTO users (name, email, password_hash, phone, city, lat, lng) VALUES (?,?,?,?,?,?,?)')
-      .run(name, email, bcrypt.hashSync(password, 10), str(req.body.phone, { max: 20 }), city, jitter(lat), jitter(lng));
+      .prepare('INSERT INTO users (name, email, password_hash, phone, city, lat, lng, consent_at, consent_version, language) VALUES (?,?,?,?,?,?,?,CURRENT_TIMESTAMP,?,?)')
+      .run(name, email, bcrypt.hashSync(password, 10), str(req.body.phone, { max: 20 }), city, jitter(lat), jitter(lng), CONSENT_VERSION, LANGS.includes(req.body.language) ? req.body.language : 'en');
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
     ensureCode(db, user.id);
     applyReferral(db, notify, user, req.body.referralCode);
@@ -34,12 +39,13 @@ module.exports = ({ db, ser, auth, notify }) => {
     if (!user || !user.password_hash || !bcrypt.compareSync(String(req.body.password || ''), user.password_hash)) {
       throw new HttpError(401, 'Email or password is incorrect');
     }
+    if (user.suspended) throw new HttpError(403, 'Your account has been suspended. Please contact support.');
     res.json({ token: sign(user), user: ser.me(user) });
   });
 
   // Tells the app which sign-in methods this server supports.
   r.get('/auth/config', (_req, res) => {
-    res.json({ firebase: !!(config.firebaseProjectId || config.firebaseServiceAccountJson), devMode: config.firebaseDevMode });
+    res.json({ firebase: !!(config.firebaseProjectId || config.firebaseServiceAccountJson), devMode: config.firebaseDevMode, consentVersion: CONSENT_VERSION });
   });
 
   // Phone (OTP) and Google sign-in: the app signs in with Firebase, then exchanges the ID token for a Connectly session.
@@ -54,17 +60,19 @@ module.exports = ({ db, ser, auth, notify }) => {
     if (user) {
       db.prepare("UPDATE users SET firebase_uid = COALESCE(firebase_uid, ?), phone = CASE WHEN phone = '' THEN ? ELSE phone END, verified = 1 WHERE id = ?").run(f.uid, f.phone, user.id);
     } else {
+      needConsent(req.body);
       isNew = true;
       const city = CITIES[req.body.city] ? req.body.city : 'Chennai';
       const [lat, lng] = CITIES[city];
       const info = db
-        .prepare('INSERT INTO users (name, email, phone, firebase_uid, auth_provider, city, lat, lng, verified) VALUES (?,?,?,?,?,?,?,?,1)')
-        .run(f.name.slice(0, 80), f.email, f.phone, f.uid, f.provider, city, jitter(lat), jitter(lng));
+        .prepare('INSERT INTO users (name, email, phone, firebase_uid, auth_provider, city, lat, lng, verified, consent_at, consent_version, language) VALUES (?,?,?,?,?,?,?,?,1,CURRENT_TIMESTAMP,?,?)')
+        .run(f.name.slice(0, 80), f.email, f.phone, f.uid, f.provider, city, jitter(lat), jitter(lng), CONSENT_VERSION, LANGS.includes(req.body.language) ? req.body.language : 'en');
       user = find('SELECT * FROM users WHERE id = ?', info.lastInsertRowid);
       ensureCode(db, user.id);
       applyReferral(db, notify, user, req.body.referralCode);
     }
     user = find('SELECT * FROM users WHERE id = ?', user.id);
+    if (user.suspended) throw new HttpError(403, 'Your account has been suspended. Please contact support.');
     res.status(isNew ? 201 : 200).json({ token: sign(user), user: ser.me(user), isNew, needsProfile: !user.name });
   });
 
@@ -89,6 +97,12 @@ module.exports = ({ db, ser, auth, notify }) => {
       b.avatar !== undefined ? str(b.avatar, { max: 300 }) : u.avatar,
       u.id,
     );
+    if (b.upiId !== undefined) {
+      const upi = String(b.upiId).trim();
+      if (upi && !UPI_RE.test(upi)) throw new HttpError(400, 'That UPI ID does not look right. It should look like name@bank');
+      db.prepare('UPDATE users SET upi_id = ? WHERE id = ?').run(upi, u.id);
+    }
+    if (b.language !== undefined && LANGS.includes(b.language)) db.prepare('UPDATE users SET language = ? WHERE id = ?').run(b.language, u.id);
     if (typeof b.pushEnabled === 'boolean') db.prepare('UPDATE users SET push_enabled = ? WHERE id = ?').run(b.pushEnabled ? 1 : 0, u.id);
     res.json({ user: ser.me(db.prepare('SELECT * FROM users WHERE id = ?').get(u.id)) });
   });

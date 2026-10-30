@@ -51,18 +51,18 @@ const login = async (email) => (await api('/auth/login', { method: 'POST', body:
 const tick = () => new Promise((r) => setTimeout(r, 30));
 
 test('phone OTP sign-in via Firebase (dev mode): wrong code, new user, returning user, profile completion', async () => {
-  const bad = await api('/auth/firebase', { method: 'POST', body: { idToken: 'dev:phone:+919876500001:000000' } });
+  const bad = await api('/auth/firebase', { method: 'POST', body: { consent: true, idToken: 'dev:phone:+919800000001:000000' } });
   assert.equal(bad.status, 401);
-  assert.equal((await api('/auth/firebase', { method: 'POST', body: { idToken: 'dev:phone:12345:123456' } })).status, 400);
-  const first = await api('/auth/firebase', { method: 'POST', body: { idToken: 'dev:phone:+919876500001:123456', city: 'Madurai' } });
+  assert.equal((await api('/auth/firebase', { method: 'POST', body: { consent: true, idToken: 'dev:phone:12345:123456' } })).status, 400);
+  const first = await api('/auth/firebase', { method: 'POST', body: { consent: true, idToken: 'dev:phone:+919800000001:123456', city: 'Madurai' } });
   assert.equal(first.status, 201);
   assert.equal(first.data.isNew, true);
   assert.equal(first.data.needsProfile, true);
-  assert.equal(first.data.user.phone, '+919876500001');
+  assert.equal(first.data.user.phone, '+919800000001');
   assert.equal(first.data.user.hasPassword, false);
   const patched = await api('/me', { method: 'PATCH', token: first.data.token, body: { name: 'Phone Person' } });
   assert.equal(patched.data.user.needsProfile, false);
-  const again = await api('/auth/firebase', { method: 'POST', body: { idToken: 'dev:phone:+919876500001:123456' } });
+  const again = await api('/auth/firebase', { method: 'POST', body: { consent: true, idToken: 'dev:phone:+919800000001:123456' } });
   assert.equal(again.status, 200);
   assert.equal(again.data.isNew, false);
   assert.equal(again.data.user.id, first.data.user.id);
@@ -71,10 +71,10 @@ test('phone OTP sign-in via Firebase (dev mode): wrong code, new user, returning
 });
 
 test('Google sign-in links to an existing verified email, else creates an account', async () => {
-  const linked = await api('/auth/firebase', { method: 'POST', body: { idToken: 'dev:google:rohit@connectly.app:Rohit K' } });
+  const linked = await api('/auth/firebase', { method: 'POST', body: { consent: true, idToken: 'dev:google:rohit@connectly.app:Rohit K' } });
   assert.equal(linked.data.isNew, false);
   assert.equal(linked.data.user.name, 'Rohit Kumar');
-  const created = await api('/auth/firebase', { method: 'POST', body: { idToken: 'dev:google:fresh@gmail.com:Fresh Gmail' } });
+  const created = await api('/auth/firebase', { method: 'POST', body: { consent: true, idToken: 'dev:google:fresh@gmail.com:Fresh Gmail' } });
   assert.equal(created.data.isNew, true);
   assert.equal(created.data.user.name, 'Fresh Gmail');
   assert.equal(created.data.needsProfile, false);
@@ -86,10 +86,10 @@ test('Google sign-in links to an existing verified email, else creates an accoun
 test('dev tokens and unconfigured Firebase are rejected safely', async () => {
   config.firebaseDevMode = false;
   try {
-    assert.equal((await api('/auth/firebase', { method: 'POST', body: { idToken: 'dev:phone:+919876500002:123456' } })).status, 401);
+    assert.equal((await api('/auth/firebase', { method: 'POST', body: { consent: true, idToken: 'dev:phone:+919876500002:123456' } })).status, 401);
     const cfg = (await api('/auth/config')).data;
     assert.equal(cfg.devMode, false);
-    assert.equal((await api('/auth/firebase', { method: 'POST', body: { idToken: 'eyJhbGciOi.fake.token' } })).status, 503); // no project configured
+    assert.equal((await api('/auth/firebase', { method: 'POST', body: { consent: true, idToken: 'eyJhbGciOi.fake.token' } })).status, 503); // no project configured
   } finally { config.firebaseDevMode = true; }
 });
 
@@ -102,7 +102,7 @@ test('invites: code, link, referral signup auto-connects and notifies the invite
   assert.equal((await api('/invites', { method: 'POST', token: demo, body: { channel: 'sms', count: 3 } })).status, 201);
   assert.equal((await api('/invites', { token: demo })).data.sent, 3);
 
-  const reg = await api('/auth/register', { method: 'POST', body: { name: 'Mother In Law', email: 'mil@x.com', password: 'secret1', referralCode: inv.code.toLowerCase() } });
+  const reg = await api('/auth/register', { method: 'POST', body: { consent: true, name: 'Mother In Law', email: 'mil@x.com', password: 'secret1', referralCode: inv.code.toLowerCase() } });
   assert.equal(reg.status, 201);
   const after = (await api('/invites', { token: demo })).data;
   assert.deepEqual(after.joined.map((j) => j.name), ['Mother In Law']);
@@ -110,7 +110,7 @@ test('invites: code, link, referral signup auto-connects and notifies the invite
   const notes = (await api('/notifications', { token: demo })).data.notifications;
   assert.equal(notes[0].type, 'invite_joined');
   // bad / self codes are ignored silently
-  assert.equal((await api('/auth/register', { method: 'POST', body: { name: 'Other One', email: 'o1@x.com', password: 'secret1', referralCode: 'NOPE' } })).status, 201);
+  assert.equal((await api('/auth/register', { method: 'POST', body: { consent: true, name: 'Other One', email: 'o1@x.com', password: 'secret1', referralCode: 'NOPE' } })).status, 201);
 
   const page = await api(`/i/${inv.code}`);
   assert.equal(page.status, 200);

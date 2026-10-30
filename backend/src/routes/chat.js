@@ -2,7 +2,7 @@ const express = require('express');
 const { HttpError, str } = require('../util');
 const insights = require('../insights');
 
-module.exports = ({ db, ser, auth, notify }) => {
+module.exports = ({ db, ser, auth, notify, limits }) => {
   const r = express.Router();
   r.use(['/conversations', '/unread-count'], auth.required);
   const getConv = db.prepare('SELECT * FROM conversations WHERE id = ?');
@@ -97,16 +97,18 @@ module.exports = ({ db, ser, auth, notify }) => {
     });
   });
 
-  r.post('/conversations/:id/messages', async (req, res) => {
+  r.post('/conversations/:id/messages', limits.chat, async (req, res) => {
     const c = mine(req);
     const otherId = c.user_a === req.user.id ? c.user_b : c.user_a;
     if (isBlocked(req.user.id, otherId)) throw new HttpError(403, 'You cannot message this person');
-    const type = req.body.type === 'location' ? 'location' : 'text';
+    const type = ['location', 'image'].includes(req.body.type) ? req.body.type : 'text';
     const body = str(req.body.body, { min: 1, max: 1000, name: 'Message' });
+    if (type === 'image' && !/^\/uploads\/[0-9a-f-]{36}\.(jpg|png|webp)$/.test(body)) throw new HttpError(400, 'Invalid photo');
     const mod = type === 'text' ? await insights.moderate(body) : { allowed: true, flags: [] };
+    if (!mod.allowed && (mod.flags || []).some((f) => !['advance_payment', 'untraceable_payment', 'otp_or_credentials', 'off_platform_wallet', 'phishing_link', 'army_scam'].includes(f))) throw new HttpError(422, mod.reason);
     const info = db.prepare('INSERT INTO messages (conversation_id, sender_id, body, type) VALUES (?,?,?,?)').run(c.id, req.user.id, body, type);
     db.prepare('UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(c.id);
-    notify(otherId, { type: 'message', title: req.user.name || 'New message', body: type === 'location' ? 'Shared a location' : body.slice(0, 140), data: { conversationId: c.id } }, { inbox: false });
+    notify(otherId, { type: 'message', title: req.user.name || 'New message', body: type === 'location' ? 'Shared a location' : type === 'image' ? 'Sent a photo' : body.slice(0, 140), data: { conversationId: c.id } }, { inbox: false });
     res.status(201).json({
       message: msg(db.prepare('SELECT * FROM messages WHERE id = ?').get(info.lastInsertRowid)),
       safetyTip: mod.flags?.length ? 'Stay safe: never pay in advance or share OTPs, card details or passwords. Meet in a public place.' : null,

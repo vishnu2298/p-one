@@ -21,12 +21,14 @@ function authMiddleware(db) {
     required(req, _res, next) {
       const user = decode(req);
       if (!user) return next(new HttpError(401, 'Please log in to continue'));
+      if (user.suspended) return next(new HttpError(403, 'Your account has been suspended. Please contact support.'));
       req.user = user;
       touch.run(user.id);
       next();
     },
     optional(req, _res, next) {
-      req.user = decode(req);
+      const u = decode(req);
+      req.user = u && !u.suspended ? u : null;
       next();
     },
   };

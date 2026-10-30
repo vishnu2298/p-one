@@ -26,7 +26,9 @@ module.exports = ({ db, ser, auth }) => {
   // Individuals can upgrade to a brand partner for free; billing only starts when they run ads or sell as a brand.
   r.post('/me/brand', auth.required, (req, res) => {
     const brandName = str(req.body.brandName, { min: 2, max: 60, name: 'Brand name' });
-    db.prepare("UPDATE users SET account_type = 'brand', brand_name = ? WHERE id = ?").run(brandName, req.user.id);
+    const gstin = String(req.body.gstin || '').trim().toUpperCase();
+    if (gstin && !/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(gstin)) throw new HttpError(400, 'That GSTIN does not look right. It has 15 characters, like 33ABCDE1234F1Z5');
+    db.prepare("UPDATE users SET account_type = 'brand', brand_name = ?, gstin = ? WHERE id = ?").run(brandName, gstin, req.user.id);
     res.json({ user: ser.me(db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)) });
   });
   r.delete('/me/brand', auth.required, (req, res) => {
@@ -82,7 +84,9 @@ module.exports = ({ db, ser, auth }) => {
   r.get('/brand/summary', auth.required, brandOnly, (req, res) => {
     const ads = db.prepare('SELECT COALESCE(SUM(spend),0) spend, COALESCE(SUM(clicks),0) clicks, COALESCE(SUM(impressions),0) impressions FROM ads WHERE brand_id = ?').get(req.user.id);
     const brokerage = db.prepare("SELECT COALESCE(SUM(amount),0) fees, COUNT(*) deals FROM revenue_events WHERE kind = 'brokerage' AND brand_id = ?").get(req.user.id);
-    res.json({ brandName: req.user.brand_name, commissionRate: req.user.commission_rate, ads, brokerage: { fees: brokerage.fees, deals: brokerage.deals }, totalDue: ads.spend + brokerage.fees });
+    const subtotal = ads.spend + brokerage.fees;
+    const gst = Math.round(subtotal * config.gstRate * 100) / 100;
+    res.json({ brandName: req.user.brand_name, gstin: req.user.gstin || '', commissionRate: req.user.commission_rate, ads, brokerage: { fees: brokerage.fees, deals: brokerage.deals }, subtotal, gstRate: config.gstRate, gst, totalDue: Math.round((subtotal + gst) * 100) / 100 });
   });
 
   // Serves sponsored cards. Each is clearly labelled "Sponsored" in the app.

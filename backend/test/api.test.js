@@ -27,12 +27,12 @@ async function api(path, { method = 'GET', body, token } = {}) {
 const login = async (email) => (await api('/auth/login', { method: 'POST', body: { email, password: 'demo1234' } })).data.token;
 
 test('register, validation and login', async () => {
-  const bad = await api('/auth/register', { method: 'POST', body: { name: 'A', email: 'x', password: '1' } });
+  const bad = await api('/auth/register', { method: 'POST', body: { consent: true, name: 'A', email: 'x', password: '1' } });
   assert.equal(bad.status, 400);
-  const ok = await api('/auth/register', { method: 'POST', body: { name: 'New Person', email: 'new@x.com', password: 'secret1', city: 'Pune' } });
+  const ok = await api('/auth/register', { method: 'POST', body: { consent: true, name: 'New Person', email: 'new@x.com', password: 'secret1', city: 'Pune' } });
   assert.equal(ok.status, 201);
   assert.equal(ok.data.user.city, 'Pune');
-  const dup = await api('/auth/register', { method: 'POST', body: { name: 'New Person', email: 'NEW@x.com', password: 'secret1' } });
+  const dup = await api('/auth/register', { method: 'POST', body: { consent: true, name: 'New Person', email: 'NEW@x.com', password: 'secret1' } });
   assert.equal(dup.status, 409);
   assert.equal((await api('/auth/login', { method: 'POST', body: { email: 'new@x.com', password: 'wrong' } })).status, 401);
   assert.equal((await api('/me')).status, 401);
@@ -135,7 +135,7 @@ test('safety: reports and moderation fallback', async () => {
 });
 
 test('profile update and account deletion', async () => {
-  const token = (await api('/auth/register', { method: 'POST', body: { name: 'Temp User', email: 'temp@x.com', password: 'secret1' } })).data.token;
+  const token = (await api('/auth/register', { method: 'POST', body: { consent: true, name: 'Temp User', email: 'temp@x.com', password: 'secret1' } })).data.token;
   const upd = await api('/me', { method: 'PATCH', token, body: { bio: 'Hello', interests: ['Bikes', 'Tech'], city: 'Kochi' } });
   assert.equal(upd.data.user.city, 'Kochi');
   assert.deepEqual(upd.data.user.interests, ['Bikes', 'Tech']);
@@ -156,7 +156,7 @@ test('deleting a listing or account with completed orders and reviews works', as
 
 test('uploads accept real images only', async () => {
   const token = await login('demo2@connectly.app').catch(() => null);
-  const t = token || (await api('/auth/register', { method: 'POST', body: { name: 'Uploader', email: 'up@x.com', password: 'secret1' } })).data.token;
+  const t = token || (await api('/auth/register', { method: 'POST', body: { consent: true, name: 'Uploader', email: 'up@x.com', password: 'secret1' } })).data.token;
   const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAfbLI3wAAAABJRU5ErkJggg==', 'base64').toString('base64');
   const good = await api('/uploads', { method: 'POST', token: t, body: { data: png, mime: 'image/png' } });
   assert.equal(good.status, 201);

@@ -12,10 +12,18 @@ module.exports = ({ db, ser, auth, notify }) => {
   const shape = (o, me) => {
     const l = getListing.get(o.listing_id);
     const reviewed = db.prepare('SELECT 1 FROM reviews WHERE order_id = ? AND reviewer_id = ?').get(o.id, me.id);
+    const other = getUser.get(o.buyer_id === me.id ? o.seller_id : o.buyer_id);
+    const agreed = ['accepted', 'completed'].includes(o.status);
+    const mine = o.buyer_id === me.id;
     return {
       id: o.id,
       status: o.status,
       price: o.price,
+      listPrice: o.list_price || o.price,
+      // Phone numbers are revealed only once the seller has accepted, and only between the two parties.
+      contactPhone: agreed && other.phone ? other.phone : null,
+      // The seller's UPI ID is revealed to the buyer only after acceptance, so they can pay at handover.
+      pay: mine && o.status === 'accepted' && other.upi_id ? { upiId: other.upi_id, payeeName: other.name || 'Seller', amount: o.price } : null,
       commission: o.commission || 0,
       note: o.note,
       createdAt: o.created_at,
@@ -34,10 +42,18 @@ module.exports = ({ db, ser, auth, notify }) => {
     if (db.prepare("SELECT 1 FROM orders WHERE listing_id = ? AND buyer_id = ? AND status IN ('requested','accepted')").get(l.id, req.user.id)) {
       throw new HttpError(409, 'You already have an open request for this item');
     }
+    // Bargaining is normal in India: buyers may offer less than the asking price (not below 30% of it).
+    let price = l.price;
+    if (req.body.offer !== undefined && req.body.offer !== null && req.body.offer !== '') {
+      price = Math.round(Number(req.body.offer));
+      if (!Number.isFinite(price) || price < Math.ceil(l.price * 0.3) || price > l.price) {
+        throw new HttpError(400, `Please offer between ₹${Math.ceil(l.price * 0.3).toLocaleString('en-IN')} and ₹${l.price.toLocaleString('en-IN')}`);
+      }
+    }
     const info = db
-      .prepare('INSERT INTO orders (listing_id,buyer_id,seller_id,price,note) VALUES (?,?,?,?,?)')
-      .run(l.id, req.user.id, l.seller_id, l.price, str(req.body.note, { max: 300 }));
-    notify(l.seller_id, { type: 'order_request', title: 'New buy request', body: `${req.user.name || 'Someone'} wants to buy ${l.title}`, data: { orderId: Number(info.lastInsertRowid) } });
+      .prepare('INSERT INTO orders (listing_id,buyer_id,seller_id,price,list_price,note) VALUES (?,?,?,?,?,?)')
+      .run(l.id, req.user.id, l.seller_id, price, l.price, str(req.body.note, { max: 300 }));
+    notify(l.seller_id, { type: 'order_request', title: price < l.price ? 'New offer' : 'New buy request', body: price < l.price ? `${req.user.name || 'Someone'} offered ₹${price.toLocaleString('en-IN')} for ${l.title}` : `${req.user.name || 'Someone'} wants to buy ${l.title}`, data: { orderId: Number(info.lastInsertRowid) } });
     res.status(201).json({ order: shape(getOrder.get(info.lastInsertRowid), req.user) });
   });
 

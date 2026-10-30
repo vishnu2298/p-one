@@ -18,7 +18,15 @@ function createApp(db = open(), deps = {}) {
   const push = deps.push || createPush();
   const notify = makeNotifier(db, push);
   const affiliate = createAffiliate(db, deps.fetch);
-  const ctx = { db, ser, auth, notify, push, affiliate };
+  // Anti-spam limits per signed-in user (skipped in tests).
+  const per = (limit, windowMs) => (process.env.NODE_ENV === 'test' ? (_q, _r, n) => n() : rateLimit({
+    windowMs, limit, standardHeaders: true, legacyHeaders: false,
+    keyGenerator: (req) => (req.user ? `u${req.user.id}` : req.ip),
+    message: { error: 'You are doing that a lot. Please wait a moment and try again.' },
+    validate: { keyGeneratorIpFallback: false },
+  }));
+  const limits = { create: per(20, 60 * 60 * 1000), chat: per(60, 60 * 1000) };
+  const ctx = { db, ser, auth, notify, push, affiliate, limits };
 
   app.set('trust proxy', 1);
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
@@ -31,7 +39,7 @@ function createApp(db = open(), deps = {}) {
   app.get('/health', (_req, res) => res.json({ ok: true, name: 'connectly-api' }));
   app.use('/uploads', express.static(config.uploadDir, { maxAge: '7d' }));
 
-  for (const mod of ['auth', 'listings', 'orders', 'chat', 'people', 'safety', 'notifications', 'affiliate', 'invites', 'brand']) {
+  for (const mod of ['auth', 'listings', 'orders', 'chat', 'people', 'safety', 'notifications', 'affiliate', 'invites', 'brand', 'legal', 'groups', 'admin', 'share']) {
     app.use(require(`./routes/${mod}`)(ctx));
   }
 

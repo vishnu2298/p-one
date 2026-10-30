@@ -40,7 +40,7 @@ function makeSerializers(db) {
   function me(u) {
     return {
       ...user(u, { full: true }), email: u.email || '', phone: u.phone, lat: u.lat, lng: u.lng,
-      hasPassword: !!u.password_hash, commissionRate: u.account_type === 'brand' ? u.commission_rate : 0, authProvider: u.auth_provider, pushEnabled: !!u.push_enabled, needsProfile: !u.name,
+      hasPassword: !!u.password_hash, upiId: u.upi_id || '', language: u.language || 'en', gstin: u.gstin || '', commissionRate: u.account_type === 'brand' ? u.commission_rate : 0, authProvider: u.auth_provider, pushEnabled: !!u.push_enabled, needsProfile: !u.name,
     };
   }
 

@@ -1,15 +1,40 @@
-const CITIES = {
-  Chennai: [13.0827, 80.2707],
-  Bengaluru: [12.9716, 77.5946],
-  Mumbai: [19.076, 72.8777],
-  Delhi: [28.6139, 77.209],
-  Hyderabad: [17.385, 78.4867],
-  Pune: [18.5204, 73.8567],
-  Coimbatore: [11.0168, 76.9558],
-  Madurai: [9.9252, 78.1198],
-  Kolkata: [22.5726, 88.3639],
-  Kochi: [9.9312, 76.2673],
+const CITY_INFO = {
+  'Chennai': [13.0827, 80.2707, 'Tamil Nadu'],
+  'Coimbatore': [11.0168, 76.9558, 'Tamil Nadu'],
+  'Madurai': [9.9252, 78.1198, 'Tamil Nadu'],
+  'Tiruchirappalli': [10.7905, 78.7047, 'Tamil Nadu'],
+  'Salem': [11.6643, 78.146, 'Tamil Nadu'],
+  'Tirunelveli': [8.7139, 77.7567, 'Tamil Nadu'],
+  'Vellore': [12.9165, 79.1325, 'Tamil Nadu'],
+  'Bengaluru': [12.9716, 77.5946, 'Karnataka'],
+  'Mysuru': [12.2958, 76.6394, 'Karnataka'],
+  'Hyderabad': [17.385, 78.4867, 'Telangana'],
+  'Visakhapatnam': [17.6868, 83.2185, 'Andhra Pradesh'],
+  'Kochi': [9.9312, 76.2673, 'Kerala'],
+  'Thiruvananthapuram': [8.5241, 76.9366, 'Kerala'],
+  'Mumbai': [19.076, 72.8777, 'Maharashtra'],
+  'Pune': [18.5204, 73.8567, 'Maharashtra'],
+  'Nagpur': [21.1458, 79.0882, 'Maharashtra'],
+  'Delhi': [28.6139, 77.209, 'Delhi'],
+  'Noida': [28.5355, 77.391, 'Uttar Pradesh'],
+  'Gurugram': [28.4595, 77.0266, 'Haryana'],
+  'Lucknow': [26.8467, 80.9462, 'Uttar Pradesh'],
+  'Chandigarh': [30.7333, 76.7794, 'Chandigarh'],
+  'Jaipur': [26.9124, 75.7873, 'Rajasthan'],
+  'Ahmedabad': [23.0225, 72.5714, 'Gujarat'],
+  'Surat': [21.1702, 72.8311, 'Gujarat'],
+  'Vadodara': [22.3072, 73.1812, 'Gujarat'],
+  'Indore': [22.7196, 75.8577, 'Madhya Pradesh'],
+  'Bhopal': [23.2599, 77.4126, 'Madhya Pradesh'],
+  'Kolkata': [22.5726, 88.3639, 'West Bengal'],
+  'Patna': [25.5941, 85.1376, 'Bihar'],
+  'Ranchi': [23.3441, 85.3096, 'Jharkhand'],
+  'Bhubaneswar': [20.2961, 85.8245, 'Odisha'],
+  'Guwahati': [26.1445, 91.7362, 'Assam'],
 };
+// name -> [lat, lng]
+const CITIES = Object.fromEntries(Object.entries(CITY_INFO).map(([k, v]) => [k, [v[0], v[1]]]));
+const CITY_LIST = Object.entries(CITY_INFO).map(([name, v]) => ({ name, lat: v[0], lng: v[1], state: v[2] }));
 
 const CATEGORIES = [
   { id: 'electronics', name: 'Electronics', hint: 'Mobiles, laptops, gadgets', icon: 'phone-portrait', color: '#1D4ED8', bg: '#DBEAFE' },
@@ -49,4 +74,4 @@ const str = (v, { min = 0, max = 500, name = 'Field' } = {}) => {
 
 const jitter = (n, amt = 0.04) => n + (Math.random() - 0.5) * amt;
 
-module.exports = { CITIES, CATEGORIES, CATEGORY_IDS, haversineKm, HttpError, str, jitter };
+module.exports = { CITIES, CITY_LIST, CATEGORIES, CATEGORY_IDS, haversineKm, HttpError, str, jitter };

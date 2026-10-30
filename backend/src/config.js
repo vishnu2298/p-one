@@ -30,6 +30,14 @@ const config = {
   grievanceEmail: process.env.GRIEVANCE_EMAIL || 'grievance@example.com',
   grievancePhone: process.env.GRIEVANCE_PHONE || '',
   gstRate: 0.18,
+  razorpayKeyId: process.env.RAZORPAY_KEY_ID || '',
+  razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET || '',
+  razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || '',
+  // Platform terms for auctions (disclosed to bidders in the auction terms).
+  auctionCommissionBps: Number(process.env.AUCTION_COMMISSION_BPS || 500),
+  auctionGatewayFeeBps: Number(process.env.AUCTION_GATEWAY_FEE_BPS || 200),
+  auctionAllowForfeit: process.env.AUCTION_ALLOW_FORFEIT !== '0', // deposit forfeiture on winner default; confirm legality before enabling in production
+  auctionAutoApprove: process.env.AUCTION_AUTO_APPROVE === '1',
   isProd: process.env.NODE_ENV === 'production',
 };
 

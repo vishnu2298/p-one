@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { DatabaseSync } = require('node:sqlite');
 const config = require('./config');
+const { migrateModules } = require('./modules/schema');
 
 const USERS_DDL = (name) => `
   CREATE TABLE IF NOT EXISTS ${name} (
@@ -275,6 +276,7 @@ function open(file = config.dbFile) {
   );
   CREATE INDEX IF NOT EXISTS idx_gmsg ON group_messages(group_id, id);
   `);
+  migrateModules(db);
   backfillReferralCodes(db);
   return db;
 }

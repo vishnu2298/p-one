@@ -12,6 +12,9 @@ const { makeSerializers } = require('./serialize');
 const { createPush } = require('./firebase');
 const { makeNotifier } = require('./notify');
 const { createAffiliate } = require('./affiliate');
+const { createJobs } = require('./modules/jobs');
+const { createPayments } = require('./modules/payments');
+const { mountModules } = require('./modules');
 
 function createApp(db = open(), deps = {}) {
   const app = express();
@@ -27,7 +30,11 @@ function createApp(db = open(), deps = {}) {
     message: { error: 'You are doing that a lot. Please wait a moment and try again.' },
   }));
   const limits = { create: per(20, 60 * 60 * 1000), chat: per(60, 60 * 1000) };
-  const ctx = { db, ser, auth, notify, push, affiliate, limits };
+  const clock = deps.clock || Date.now;
+  const jobs = createJobs(db, { clock });
+  const payments = createPayments(db, { clock, config });
+  const publicBase = (req) => config.publicUrl || `${req.protocol}://${req.get('host')}`;
+  const ctx = { db, ser, auth, notify, push, affiliate, limits, clock, jobs, payments, publicBase };
 
   app.set('trust proxy', 1);
   app.use(helmet({
@@ -36,7 +43,7 @@ function createApp(db = open(), deps = {}) {
     contentSecurityPolicy: { directives: { ...helmet.contentSecurityPolicy.getDefaultDirectives(), 'img-src': ["'self'", 'data:', 'blob:', 'https:'], 'connect-src': ["'self'", 'https:'] } },
   }));
   app.use(cors());
-  app.use(express.json({ limit: '9mb' }));
+  app.use(express.json({ limit: '9mb', verify: (req, _res, buf) => { req.rawBody = buf; } })); // raw body is needed to verify payment-webhook signatures
   if (process.env.NODE_ENV !== 'test') {
     app.use('/auth', rateLimit({ windowMs: 15 * 60 * 1000, limit: 60, standardHeaders: true, legacyHeaders: false }));
   }
@@ -47,6 +54,8 @@ function createApp(db = open(), deps = {}) {
   for (const mod of ['auth', 'listings', 'orders', 'chat', 'people', 'safety', 'notifications', 'affiliate', 'invites', 'brand', 'legal', 'groups', 'admin', 'share']) {
     app.use(require(`./routes/${mod}`)(ctx));
   }
+
+  mountModules(app, ctx);
 
   // Serve the prebuilt web app (backend/web) so the whole product runs from one process: `npm run demo`.
   const webDir = process.env.WEB_DIR || path.join(__dirname, '..', 'web');
@@ -64,6 +73,7 @@ function createApp(db = open(), deps = {}) {
     console.error(err);
     res.status(500).json({ error: 'Something went wrong. Please try again.' });
   });
+  app.ctx = ctx; // exposed for tests and the job worker
   return app;
 }
 

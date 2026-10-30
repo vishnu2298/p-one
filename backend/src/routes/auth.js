@@ -5,6 +5,7 @@ const { HttpError, str, CITIES, jitter } = require('../util');
 const { verifyIdToken } = require('../firebase');
 const { applyReferral, ensureCode } = require('../referral');
 const config = require('../config');
+const { claimInvites } = require('../modules/business');
 const { VERSION: CONSENT_VERSION } = require('./legal');
 const UPI_RE = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
 const LANGS = ['en', 'hi', 'ta'];
@@ -30,6 +31,7 @@ module.exports = ({ db, ser, auth, notify }) => {
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
     ensureCode(db, user.id);
     applyReferral(db, notify, user, req.body.referralCode);
+    claimInvites(db, user);
     res.status(201).json({ token: sign(user), user: ser.me(user) });
   });
 
@@ -40,6 +42,7 @@ module.exports = ({ db, ser, auth, notify }) => {
       throw new HttpError(401, 'Email or password is incorrect');
     }
     if (user.suspended) throw new HttpError(403, 'Your account has been suspended. Please contact support.');
+    claimInvites(db, user);
     res.json({ token: sign(user), user: ser.me(user) });
   });
 
@@ -73,6 +76,7 @@ module.exports = ({ db, ser, auth, notify }) => {
     }
     user = find('SELECT * FROM users WHERE id = ?', user.id);
     if (user.suspended) throw new HttpError(403, 'Your account has been suspended. Please contact support.');
+    claimInvites(db, user);
     res.status(isNew ? 201 : 200).json({ token: sign(user), user: ser.me(user), isNew, needsProfile: !user.name });
   });
 
